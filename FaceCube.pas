@@ -1,7 +1,7 @@
 unit FaceCube;
 
 interface
-uses CubeDefs,Windows,Graphics,extctrls;
+uses CubeDefs;
 type
 //++++++++++++++Classe for Cube on the Facelet Level++++++++++++++++++++++++++++
   FaceletCube = Class
@@ -10,11 +10,8 @@ type
   public
     Face1,Face2,FaceOrig,FaceOrigOpt: FaceletColor;
     PFace,PFaceTemp,swap: ^FaceletColor;
-    size: Integer;//3*size gives pixelnumber for one square in cube picture
     isOriented: Boolean;
     cenTwist: CenterTwist;
-    x,y: Integer;
-    cv:TCanvas;//
     tripSearch: TObject;//for the two phase search;
     optSearch: TObject;// for the optimal search
     running,solver,runOptimal,selected:Boolean;
@@ -25,7 +22,7 @@ type
     paintType: Integer;//0:all, 1:only corners, 2:only edges
 
 
-    procedure Move(x:TurnAxis);
+    procedure Move(_x:TurnAxis);
     procedure Conjugate(s:Symmetry);
     procedure DrawCube(xOff,yOff:Integer);
     procedure Empty;
@@ -39,10 +36,9 @@ type
     function TwistOk:Boolean;
     function FlipOk:Boolean;
 
-    constructor Create(cvas:TCanvas);overload;
-    constructor Create(fc:FaceletCube;cvas:TCanvas;x,y,size:Integer;t:Integer);overload;
-    constructor Create(fc:FaceletCube;cvas:TCanvas;x,y,size:Integer;
-                        t:Integer;ctw:Centertwist);overload;
+    constructor Create();overload;
+    constructor Create(fc:FaceletCube;t:Integer);overload;
+    constructor Create(fc:FaceletCube;t:Integer;ctw:Centertwist);overload;
 //    constructor Create(man:String;cvas:TCanvas);overload;
     end;
 
@@ -51,62 +47,59 @@ implementation
 
 //+++++++++ FaceletCube +++++++++
 
-uses  classes,SysUtils,RubikMain,CubiCube,Forms,Symmetries,Search; //!!!SEARCH wegen MAXNODES
+uses  classes,SysUtils,CubiCube,Symmetries,Search; //!!!SEARCH wegen MAXNODES
 
 
 
-//+++++++++++++++++++++Draw parallelogram type 1 in cube picture++++++++++++++++
-procedure drawPara1(c:TCanvas;x,y,l:Longint);
-var p: Array[1..4] of TPoint;
-begin
-  p[1].X:=x;p[1].Y:=y;p[2].X:=x+3*l;p[2].Y:=y;p[3].X:=p[2].x-2*l;p[3].y:=p[2].y+2*l;
-  p[4].X:=p[3].X -3*l;p[4].Y:=p[3].Y;
-  SetBkMode(c.Handle, OPAQUE); //to set the hatched background
-  SetBkColor(C.Handle, clBlack);
-  c.Polygon(p);
-  SetBkMode(c.Handle, TRANSPARENT);
-end;
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// //+++++++++++++++++++++Draw parallelogram type 1 in cube picture++++++++++++++++
+// procedure drawPara1(c:TCanvas;x,y,l:Longint);
+// var p: Array[1..4] of TPoint;
+// begin
+//   p[1].X:=x;p[1].Y:=y;p[2].X:=x+3*l;p[2].Y:=y;p[3].X:=p[2].x-2*l;p[3].y:=p[2].y+2*l;
+//   p[4].X:=p[3].X -3*l;p[4].Y:=p[3].Y;
+//   SetBkMode(c.Handle, OPAQUE); //to set the hatched background
+//   SetBkColor(C.Handle, clBlack);
+//   c.Polygon(p);
+//   SetBkMode(c.Handle, TRANSPARENT);
+// end;
+// //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-//++++++++++++++++++++++++draw parralelogram type 2 in cube picture+++++++++++++
-procedure drawPara2(c:TCanvas;x,y,l:Longint);
-var p: Array[1..4] of TPoint;
-begin
-  p[1].X:=x;p[1].Y:=y;p[2].X:=x+2*l;p[2].Y:=y-2*l;p[3].X:=p[2].x;p[3].y:=p[2].y+3*l;
-  p[4].X:=p[1].X;p[4].Y:=p[1].Y+3*l;
-  SetBkMode(c.Handle, OPAQUE);
-  SetBkColor(C.Handle, clBlack);
-  c.Polygon(p);
-  SetBkMode(c.Handle, TRANSPARENT);
-end;
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// //++++++++++++++++++++++++draw parralelogram type 2 in cube picture+++++++++++++
+// procedure drawPara2(c:TCanvas;x,y,l:Longint);
+// var p: Array[1..4] of TPoint;
+// begin
+//   p[1].X:=x;p[1].Y:=y;p[2].X:=x+2*l;p[2].Y:=y-2*l;p[3].X:=p[2].x;p[3].y:=p[2].y+3*l;
+//   p[4].X:=p[1].X;p[4].Y:=p[1].Y+3*l;
+//   SetBkMode(c.Handle, OPAQUE);
+//   SetBkColor(C.Handle, clBlack);
+//   c.Polygon(p);
+//   SetBkMode(c.Handle, TRANSPARENT);
+// end;
+// //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-//++++++++++++++++++draw square in cube picture+++++++++++++++++++++++++++++++++
-procedure drawSquare(c:TCanvas;x,y,l:Longint);
-var p: Array[1..4] of TPoint;
-begin
-  p[1].X:=x;p[1].Y:=y;p[2].X:=x+3*l;p[2].Y:=y;p[3].X:=p[2].x;p[3].y:=p[2].y+3*l;
-  p[4].X:=p[3].X -3*l;p[4].Y:=p[3].Y;
-  SetBkMode(c.Handle, OPAQUE);
-  SetBkColor(C.Handle, clBlack);
-  c.Polygon(p);
-  SetBkMode(c.Handle, TRANSPARENT);
-end;
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// //++++++++++++++++++draw square in cube picture+++++++++++++++++++++++++++++++++
+// procedure drawSquare(c:TCanvas;x,y,l:Longint);
+// var p: Array[1..4] of TPoint;
+// begin
+//   p[1].X:=x;p[1].Y:=y;p[2].X:=x+3*l;p[2].Y:=y;p[3].X:=p[2].x;p[3].y:=p[2].y+3*l;
+//   p[4].X:=p[3].X -3*l;p[4].Y:=p[3].Y;
+//   SetBkMode(c.Handle, OPAQUE);
+//   SetBkColor(C.Handle, clBlack);
+//   c.Polygon(p);
+//   SetBkMode(c.Handle, TRANSPARENT);
+// end;
+// //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-//++++++Constructor saves Canvas where the faceletcube draws itself+++++++++++++
-constructor FaceletCube.Create(cvas:TCanvas);
+// //++++++Constructor saves Canvas where the faceletcube draws itself+++++++++++++
+constructor FaceletCube.Create();
 var i: TurnAxis;
 begin
   isOriented:=false;
   for i:= U to B do cenTwist[i]:=0;
-  cv:=cvas;//pb:=pbox;
+  // cv:=cvas;//pb:=pbox;
   PFace:= @Face1;
   PFaceTemp:=@Face2;
   Clean;
-  size:=10;
-  x:=0;
-  y:=0;
   tripSearch:=nil;
   optSearch:=nil;
   runOptimal:=false;
@@ -116,19 +109,19 @@ begin
   optManeuver:='Status: Not Running';
   optLength:= 30;//will allways be shorter
 end;
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //++++++++++++++++++++Move on the facelet level+++++++++++++++++++++++++++++++++
-procedure FaceletCube.Move(x: TurnAxis);  //fehlerhaft
-var i: Face; tmp: Integer; tmpCol:TColor;
+procedure FaceletCube.Move(_x: TurnAxis);  //fehlerhaft
+var i: Face; tmp: Integer; // tmpCol:TColor;
 begin
   swap:= PFace; PFace:= PFaceTemp; PFaceTemp:=swap;
   for i:=U1 to B9 do
-    PFace^[FaceletMove[x,i]]:=PFaceTemp^[i];
+    PFace^[FaceletMove[_x,i]]:=PFaceTemp^[i];
 
-  if x<=B then cenTwist[x]:=  (cenTwist[x]+1) and 3
-//Sonderbehandlung für Züge, die die Mitten verändern
-  else if x=E then
+  if _x<=B then cenTwist[_x]:=  (cenTwist[_x]+1) and 3
+//Sonderbehandlung fï¿½r Zï¿½ge, die die Mitten verï¿½ndern
+  else if _x=E then
   begin
     cenTwist[U]:= (cenTwist[U]+1) and 3;cenTwist[D]:= (cenTwist[D]+3) and 3;
     tmp:=cenTwist[R]; cenTwist[R]:= cenTwist[F]; cenTwist[F]:= cenTwist[L];
@@ -151,14 +144,14 @@ begin
       OriCol: PFaceTemp^[i]:= OriCol;
     end;
     swap:= PFace; PFace:= PFaceTemp; PFaceTemp:=swap;
-    //jetzt noch die Farben ändern
-    tmpCol:=Color[FCol];
-    Color[FCol]:= Color[LCol];//F nimmt die Farbe von L an
-    Color[LCol]:= Color[BCol];
-    Color[BCol]:= Color[RCol];
-    Color[RCol]:= tmpCol;
+    //jetzt noch die Farben ï¿½ndern
+    // tmpCol:=Color[FCol];
+    // Color[FCol]:= Color[LCol];//F nimmt die Farbe von L an
+    // Color[LCol]:= Color[BCol];
+    // Color[BCol]:= Color[RCol];
+    // Color[RCol]:= tmpCol;
   end
-  else if x=M then
+  else if _x=M then
   begin cenTwist[R]:= (cenTwist[R]+1) and 3;cenTwist[L]:= (cenTwist[L]+3) and 3;
     tmp:=cenTwist[U]; cenTwist[U]:= cenTwist[B]; cenTwist[B]:= cenTwist[D];
     cenTwist[D]:= cenTwist[F]; cenTwist[F]:= tmp;
@@ -180,14 +173,14 @@ begin
       OriCol: PFaceTemp^[i]:= OriCol;
     end;
     swap:= PFace; PFace:= PFaceTemp; PFaceTemp:=swap;
-    //jetzt noch die Farben ändern
-    tmpCol:=Color[UCol];
-    Color[UCol]:= Color[BCol];//U nimmt die Farbe von B an
-    Color[BCol]:= Color[DCol];
-    Color[DCol]:= Color[FCol];
-    Color[FCol]:= tmpCol;
+    //jetzt noch die Farben ï¿½ndern
+    // tmpCol:=Color[UCol];
+    // Color[UCol]:= Color[BCol];//U nimmt die Farbe von B an
+    // Color[BCol]:= Color[DCol];
+    // Color[DCol]:= Color[FCol];
+    // Color[FCol]:= tmpCol;
   end
-  else if x=S then
+  else if _x=S then
   begin cenTwist[F]:= (cenTwist[F]+3) and 3;cenTwist[B]:= (cenTwist[B]+1) and 3;
     tmp:=cenTwist[U]; cenTwist[U]:= cenTwist[L]; cenTwist[L]:= cenTwist[D];
     cenTwist[D]:= cenTwist[R]; cenTwist[R]:= tmp;
@@ -209,14 +202,14 @@ begin
       OriCol: PFaceTemp^[i]:= OriCol;
     end;
     swap:= PFace; PFace:= PFaceTemp; PFaceTemp:=swap;
-    //jetzt noch die Farben ändern
-    tmpCol:=Color[UCol];
-    Color[UCol]:= Color[LCol];//U nimmt die Farbe von L an
-    Color[LCol]:= Color[DCol];
-    Color[DCol]:= Color[RCol];
-    Color[RCol]:= tmpCol;
+    //jetzt noch die Farben ï¿½ndern
+    // tmpCol:=Color[UCol];
+    // Color[UCol]:= Color[LCol];//U nimmt die Farbe von L an
+    // Color[LCol]:= Color[DCol];
+    // Color[DCol]:= Color[RCol];
+    // Color[RCol]:= tmpCol;
   end
-  else if x=Us then//x-Move
+  else if _x=Us then//_x-Move
   begin
     tmp:=cenTwist[U]; cenTwist[U]:= cenTwist[F]; cenTwist[F]:= cenTwist[D];
     cenTwist[D]:= cenTwist[B]; cenTwist[B]:= tmp;
@@ -238,14 +231,14 @@ begin
       OriCol: PFaceTemp^[i]:= OriCol;
     end;
     swap:= PFace; PFace:= PFaceTemp; PFaceTemp:=swap;
-    //jetzt noch die Farben ändern
-    tmpCol:=Color[UCol];
-    Color[UCol]:= Color[FCol];//U nimmt die Farbe von F an
-    Color[FCol]:= Color[DCol];
-    Color[DCol]:= Color[BCol];
-    Color[BCol]:= tmpCol;
+    //jetzt noch die Farben ï¿½ndern
+    // tmpCol:=Color[UCol];
+    // Color[UCol]:= Color[FCol];//U nimmt die Farbe von F an
+    // Color[FCol]:= Color[DCol];
+    // Color[DCol]:= Color[BCol];
+    // Color[BCol]:= tmpCol;
   end
-  else if x=Rs then//y-Move
+  else if _x=Rs then//y-Move
   begin
     tmp:=cenTwist[R]; cenTwist[R]:= cenTwist[B]; cenTwist[B]:= cenTwist[L];
     cenTwist[L]:= cenTwist[F]; cenTwist[F]:= tmp;
@@ -267,14 +260,14 @@ begin
       OriCol: PFaceTemp^[i]:= OriCol;
     end;
     swap:= PFace; PFace:= PFaceTemp; PFaceTemp:=swap;
-    //jetzt noch die Farben ändern
-    tmpCol:=Color[FCol];
-    Color[FCol]:= Color[RCol];//F nimmt die Farbe von R an
-    Color[RCol]:= Color[BCol];
-    Color[BCol]:= Color[LCol];
-    Color[LCol]:= tmpCol;
+    //jetzt noch die Farben ï¿½ndern
+    // tmpCol:=Color[FCol];
+    // Color[FCol]:= Color[RCol];//F nimmt die Farbe von R an
+    // Color[RCol]:= Color[BCol];
+    // Color[BCol]:= Color[LCol];
+    // Color[LCol]:= tmpCol;
   end
-  else if x=Fs then//z-Move
+  else if _x=Fs then//z-Move
   begin
    tmp:=cenTwist[U]; cenTwist[U]:= cenTwist[L]; cenTwist[L]:= cenTwist[D];
    cenTwist[D]:= cenTwist[R]; cenTwist[R]:= tmp;
@@ -296,12 +289,12 @@ begin
       OriCol: PFaceTemp^[i]:= OriCol;
     end;
     swap:= PFace; PFace:= PFaceTemp; PFaceTemp:=swap;
-    //jetzt noch die Farben ändern
-    tmpCol:=Color[UCol];
-    Color[UCol]:= Color[LCol];//U nimmt die Farbe von L an
-    Color[LCol]:= Color[DCol];
-    Color[DCol]:= Color[RCol];
-    Color[RCol]:= tmpCol;
+    //jetzt noch die Farben ï¿½ndern
+    // tmpCol:=Color[UCol];
+    // Color[UCol]:= Color[LCol];//U nimmt die Farbe von L an
+    // Color[LCol]:= Color[DCol];
+    // Color[DCol]:= Color[RCol];
+    // Color[RCol]:= tmpCol;
   end
 
 
@@ -357,104 +350,104 @@ end;
 //+++++++++++++++draw Cube on canvas++++++++++++++++++++++++++++++++++++++++++++
 procedure FaceletCube.DrawCube(xOff,yOff:Integer);
 var a,b,d:Integer;
-    c:TCanvas;
+    // c:TCanvas;
     i:Face;
 begin
-  a:=0;b:=0;
-  c:=cv;//cv is initialized in the constructor
-  //size:=4; //Für das zeichnen von Grafiken hier patchen 4 oder 7 nehmen
-  d:=size;
-  for i:=U1 to B9 do
-  begin
-    if PFace^[i]<UColA then
-    begin c.Brush.Color:= Color[PFace^[i]]; c.Brush.Style:= bsSolid end
-    else if PFace^[i]<OriCol then
-    begin c.Brush.Color:= Color[ColorIndex(Ord(PFace^[i])-7)]; c.Brush.Style:= bsDiagCross end
-    else begin c.Brush.Color:=Color[UCol];; c.Brush.Style:= bsBDiagonal end;
+  // a:=0;b:=0;
+  // c:=cv;//cv is initialized in the constructor
+  // //size:=4; //Fï¿½r das zeichnen von Grafiken hier patchen 4 oder 7 nehmen
+  // d:=size;
+  // for i:=U1 to B9 do
+  // begin
+  //   if PFace^[i]<UColA then
+  //   begin c.Brush.Color:= Color[PFace^[i]]; c.Brush.Style:= bsSolid end
+  //   else if PFace^[i]<OriCol then
+  //   begin c.Brush.Color:= Color[ColorIndex(Ord(PFace^[i])-7)]; c.Brush.Style:= bsDiagCross end
+  //   else begin c.Brush.Color:=Color[UCol];; c.Brush.Style:= bsBDiagonal end;
 
-    if paintType=4 then //direkter Farbmodus
-    case PFace^[i] of
-      UCol: c.Brush.Color:=clRed;
-      RCol: c.Brush.Color:=RGB(255,128,0);
-      FCol: c.Brush.Color:=clBlue;
-      DCol: c.Brush.Color:=clGreen;
-      LCol: c.Brush.Color:=clYellow;
-      BCol: c.Brush.Color:=clWhite;
-      NoCol: c.Brush.Color:=clGray;
-    end;
+  //   if paintType=4 then //direkter Farbmodus
+  //   case PFace^[i] of
+  //     UCol: c.Brush.Color:=clRed;
+  //     RCol: c.Brush.Color:=RGB(255,128,0);
+  //     FCol: c.Brush.Color:=clBlue;
+  //     DCol: c.Brush.Color:=clGreen;
+  //     LCol: c.Brush.Color:=clYellow;
+  //     BCol: c.Brush.Color:=clWhite;
+  //     NoCol: c.Brush.Color:=clGray;
+  //   end;
 
-    if paintType=1 then//no edges
-    case i of
-      U2,U4,U6,U8,R2,R4,R6,R8,F2,F4,F6,F8,D2,D4,D6,D8,L2,L4,L6,L8,B2,B4,B6,B8:
-       c.Brush.Color:= Color[Nocol];
-    end
-    else if paintType=2 then//no corners
-    case i of
-      U1,U3,U7,U9,R1,R3,R7,R9,F1,F3,F7,F9,D1,D3,D7,D9,L1,L3,L7,L9,B1,B3,B7,B9:
-        c.Brush.Color:= Color[Nocol];
-    end;
+  //   if paintType=1 then//no edges
+  //   case i of
+  //     U2,U4,U6,U8,R2,R4,R6,R8,F2,F4,F6,F8,D2,D4,D6,D8,L2,L4,L6,L8,B2,B4,B6,B8:
+  //      c.Brush.Color:= Color[Nocol];
+  //   end
+  //   else if paintType=2 then//no corners
+  //   case i of
+  //     U1,U3,U7,U9,R1,R3,R7,R9,F1,F3,F7,F9,D1,D3,D7,D9,L1,L3,L7,L9,B1,B3,B7,B9:
+  //       c.Brush.Color:= Color[Nocol];
+  //   end;
 
-    case i of
-    L1..L9: drawSquare(c,x-xOff+d*3*a,y-yOff+d*(3*b+6),d);
-    F1..F9: drawSquare(c,x-xOff+d*(3*a+9),y-yOff+d*(3*b+6),d);
-    D1..D9: drawSquare(c,x-xOff+d*(3*a+9),y-yOff+d*(3*b+15),d);
-    U1..U9: drawPara1(c,x-xOff+d*(3*a-2*b+15),y-yOff+d*2*b,d);
-    R1..R9: drawPara2(c,x-xOff+d*(2*a+18),y-yOff+d*(-2*a+3*b+6),d);
-    B1..B9: drawSquare(c,x-xOff+d*(3*a+24),y-yOff+d*3*b,d);
-    end;
-    inc(a);
-    if a mod 3= 0 then begin a:=0; inc(b); end;
-    if b = 3 then b:=0;
-    if isOriented then
-    begin
-      c.Brush.Color:=clBlack;
-      case i of
-        L5:
-        case cenTwist[L] of
-          0:c.Ellipse(x-xOff+4*d,y-yOff+9*d,x-xOff+5*d,y-yOff+10*d);
-          1:c.Ellipse(x-xOff+5*d,y-yOff+10*d,x-xOff+6*d,y-yOff+11*d);
-          2:c.Ellipse(x-xOff+4*d,y-yOff+11*d,x-xOff+5*d,y-yOff+12*d);
-          3:c.Ellipse(x-xOff+3*d,y-yOff+10*d,x-xOff+4*d,y-yOff+11*d);
-        end;
-        D5:
-        case cenTwist[CubeDefs.D] of
-          0:c.Ellipse(x-xOff+13*d,y-yOff+18*d,x-xOff+14*d,y-yOff+19*d);
-          1:c.Ellipse(x-xOff+14*d,y-yOff+19*d,x-xOff+15*d,y-yOff+20*d);
-          2:c.Ellipse(x-xOff+13*d,y-yOff+20*d,x-xOff+14*d,y-yOff+21*d);
-          3:c.Ellipse(x-xOff+12*d,y-yOff+19*d,x-xOff+13*d,y-yOff+20*d);
-        end;
-        F5:
-        case cenTwist[F] of
-          0:c.Ellipse(x-xOff+13*d,y-yOff+9*d,x-xOff+14*d,y-yOff+10*d);
-          1:c.Ellipse(x-xOff+14*d,y-yOff+10*d,x-xOff+15*d,y-yOff+11*d);
-          2:c.Ellipse(x-xOff+13*d,y-yOff+11*d,x-xOff+14*d,y-yOff+12*d);
-          3:c.Ellipse(x-xOff+12*d,y-yOff+10*d,x-xOff+13*d,y-yOff+11*d);
-        end;
-        B5:
-        case cenTwist[CubeDefs.B] of
-          0:c.Ellipse(x-xOff+28*d,y-yOff+3*d,x-xOff+29*d,y-yOff+4*d);
-          1:c.Ellipse(x-xOff+29*d,y-yOff+4*d,x-xOff+30*d,y-yOff+5*d);
-          2:c.Ellipse(x-xOff+28*d,y-yOff+5*d,x-xOff+29*d,y-yOff+6*d);
-          3:c.Ellipse(x-xOff+27*d,y-yOff+4*d,x-xOff+28*d,y-yOff+5*d);
-        end;
-        U5:
-        case cenTwist[U] of
-          0:c.Ellipse(x-xOff+33*d div 2,y-yOff+2*d,x-xOff+35*d div 2,y-yOff+3*d);
-          1:c.Ellipse(x-xOff+34*d div 2,y-yOff+5*d div 2 ,x-xOff+36*d div 2,y-yOff+7*d div 2);
-          2:c.Ellipse(x-xOff+31*d div 2,y-yOff+6*d div 2 ,x-xOff+33*d div 2,y-yOff+8*d div 2);
-          3:c.Ellipse(x-xOff+30*d div 2,y-yOff+5*d div 2 ,x-xOff+32*d div 2,y-yOff+7*d div 2);
-        end;
-        R5:
-        case cenTwist[R] of
-          0:c.Ellipse(x-xOff+41*d div 2,y-yOff+25*d div 4,x-xOff+43*d div 2,y-yOff+29*d div 4);
-          1:c.Ellipse(x-xOff+42*d div 2,y-yOff+26*d div 4,x-xOff+44*d div 2,y-yOff+30*d div 4);
-          2:c.Ellipse(x-xOff+83*d div 4,y-yOff+31*d div 4,x-xOff+87*d div 4,y-yOff+35*d div 4);
-          3:c.Ellipse(x-xOff+80*d div 4,y-yOff+31*d div 4,x-xOff+84*d div 4,y-yOff+35*d div 4);
-        end;
-      end;//case
-    end;//if
-  end;//for i
-  c.Brush.Color:= clWhite;
+  //   case i of
+  //   L1..L9: drawSquare(c,x-xOff+d*3*a,y-yOff+d*(3*b+6),d);
+  //   F1..F9: drawSquare(c,x-xOff+d*(3*a+9),y-yOff+d*(3*b+6),d);
+  //   D1..D9: drawSquare(c,x-xOff+d*(3*a+9),y-yOff+d*(3*b+15),d);
+  //   U1..U9: drawPara1(c,x-xOff+d*(3*a-2*b+15),y-yOff+d*2*b,d);
+  //   R1..R9: drawPara2(c,x-xOff+d*(2*a+18),y-yOff+d*(-2*a+3*b+6),d);
+  //   B1..B9: drawSquare(c,x-xOff+d*(3*a+24),y-yOff+d*3*b,d);
+  //   end;
+  //   inc(a);
+  //   if a mod 3= 0 then begin a:=0; inc(b); end;
+  //   if b = 3 then b:=0;
+  //   if isOriented then
+  //   begin
+  //     c.Brush.Color:=clBlack;
+  //     case i of
+  //       L5:
+  //       case cenTwist[L] of
+  //         0:c.Ellipse(x-xOff+4*d,y-yOff+9*d,x-xOff+5*d,y-yOff+10*d);
+  //         1:c.Ellipse(x-xOff+5*d,y-yOff+10*d,x-xOff+6*d,y-yOff+11*d);
+  //         2:c.Ellipse(x-xOff+4*d,y-yOff+11*d,x-xOff+5*d,y-yOff+12*d);
+  //         3:c.Ellipse(x-xOff+3*d,y-yOff+10*d,x-xOff+4*d,y-yOff+11*d);
+  //       end;
+  //       D5:
+  //       case cenTwist[CubeDefs.D] of
+  //         0:c.Ellipse(x-xOff+13*d,y-yOff+18*d,x-xOff+14*d,y-yOff+19*d);
+  //         1:c.Ellipse(x-xOff+14*d,y-yOff+19*d,x-xOff+15*d,y-yOff+20*d);
+  //         2:c.Ellipse(x-xOff+13*d,y-yOff+20*d,x-xOff+14*d,y-yOff+21*d);
+  //         3:c.Ellipse(x-xOff+12*d,y-yOff+19*d,x-xOff+13*d,y-yOff+20*d);
+  //       end;
+  //       F5:
+  //       case cenTwist[F] of
+  //         0:c.Ellipse(x-xOff+13*d,y-yOff+9*d,x-xOff+14*d,y-yOff+10*d);
+  //         1:c.Ellipse(x-xOff+14*d,y-yOff+10*d,x-xOff+15*d,y-yOff+11*d);
+  //         2:c.Ellipse(x-xOff+13*d,y-yOff+11*d,x-xOff+14*d,y-yOff+12*d);
+  //         3:c.Ellipse(x-xOff+12*d,y-yOff+10*d,x-xOff+13*d,y-yOff+11*d);
+  //       end;
+  //       B5:
+  //       case cenTwist[CubeDefs.B] of
+  //         0:c.Ellipse(x-xOff+28*d,y-yOff+3*d,x-xOff+29*d,y-yOff+4*d);
+  //         1:c.Ellipse(x-xOff+29*d,y-yOff+4*d,x-xOff+30*d,y-yOff+5*d);
+  //         2:c.Ellipse(x-xOff+28*d,y-yOff+5*d,x-xOff+29*d,y-yOff+6*d);
+  //         3:c.Ellipse(x-xOff+27*d,y-yOff+4*d,x-xOff+28*d,y-yOff+5*d);
+  //       end;
+  //       U5:
+  //       case cenTwist[U] of
+  //         0:c.Ellipse(x-xOff+33*d div 2,y-yOff+2*d,x-xOff+35*d div 2,y-yOff+3*d);
+  //         1:c.Ellipse(x-xOff+34*d div 2,y-yOff+5*d div 2 ,x-xOff+36*d div 2,y-yOff+7*d div 2);
+  //         2:c.Ellipse(x-xOff+31*d div 2,y-yOff+6*d div 2 ,x-xOff+33*d div 2,y-yOff+8*d div 2);
+  //         3:c.Ellipse(x-xOff+30*d div 2,y-yOff+5*d div 2 ,x-xOff+32*d div 2,y-yOff+7*d div 2);
+  //       end;
+  //       R5:
+  //       case cenTwist[R] of
+  //         0:c.Ellipse(x-xOff+41*d div 2,y-yOff+25*d div 4,x-xOff+43*d div 2,y-yOff+29*d div 4);
+  //         1:c.Ellipse(x-xOff+42*d div 2,y-yOff+26*d div 4,x-xOff+44*d div 2,y-yOff+30*d div 4);
+  //         2:c.Ellipse(x-xOff+83*d div 4,y-yOff+31*d div 4,x-xOff+87*d div 4,y-yOff+35*d div 4);
+  //         3:c.Ellipse(x-xOff+80*d div 4,y-yOff+31*d div 4,x-xOff+84*d div 4,y-yOff+35*d div 4);
+  //       end;
+  //     end;//case
+  //   end;//if
+  // end;//for i
+  // c.Brush.Color:= clWhite;
 end;
 //++++++++++++++End draw cube on canvas+++++++++++++++++++++++++++++++++++++++++
 
@@ -495,7 +488,7 @@ end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 function FaceletCube.isPossibleCorner(fc:Face;c:Corner):Integer;
-//prüft, wie oft eine bestimmte Ecke bei der aktuellen Farbbelegung prinzipiell vorkommen kann
+//prï¿½ft, wie oft eine bestimmte Ecke bei der aktuellen Farbbelegung prinzipiell vorkommen kann
 begin
 
 end;
@@ -782,12 +775,12 @@ begin
       end;
     end;//case
   end;//Kanten untersuchen
-  if auto and (fc < B9) then exit;//fc wird als letztes überprüft, wenn alle gecheckt werden
+  if auto and (fc < B9) then exit;//fc wird als letztes ï¿½berprï¿½ft, wenn alle gecheckt werden
 
 
 //  hier muss getestet werden, ob es eine valide Konstruktion ist!!!!
 
-//1. es dürfen keine nicht vollständigen Ecken und Kanten übrigbleiben um weiterzumachen
+//1. es dï¿½rfen keine nicht vollstï¿½ndigen Ecken und Kanten ï¿½brigbleiben um weiterzumachen
    for k:= URF to DRB do
    begin
      m:=0;t:=0;
@@ -810,11 +803,11 @@ begin
      if (t>0) and (m>0) then exit;
    end;
 
-    cCube:= CubieCube.Create(fCube);
+    cCube:= CubieCube.Create(self);
     n:= cCube.CornOriMod3;  //check orientations of corners
     if n>0 then
     begin
-       if not auto then Application.MessageBox(PChar(Err[1]),'Facelet Editor',MB_ICONWARNING);
+      //  if not auto then Application.MessageBox(PChar(Err[1]),'Facelet Editor',MB_ICONWARNING);
       for m:= 1 to n do
       begin
         ci:=PFace^[CF[URF,0]];
@@ -827,7 +820,7 @@ begin
     n:= cCube.EdgeOriMod2;  //check orientations of edges
     if n=1 then
     begin
-      if not auto then Application.MessageBox(PChar(Err[2]),'Facelet Editor',MB_ICONWARNING);
+      // if not auto then Application.MessageBox(PChar(Err[2]),'Facelet Editor',MB_ICONWARNING);
       ci:=PFace^[EF[UF,0]];
       PFace^[EF[UF,0]]:=PFace^[EF[UF,1]];
       PFace^[EF[UF,1]]:=ci;
@@ -835,7 +828,7 @@ begin
     end;
     n:=0;
     for i:= URF to DRB do if cCube.PCorn^[i].c=NNN then Inc(n);
-    if n>=2 then begin cCube.Free; exit end;//bei zwei freien Plätzen keine Parity Probleme
+    if n>=2 then begin cCube.Free; exit end;//bei zwei freien Plï¿½tzen keine Parity Probleme
     n:=0;
     for i1:= UR to BR do if cCube.PEdge^[i1].e=NN then Inc(n);
     if n>=2 then begin cCube.Free; exit end;
@@ -843,7 +836,7 @@ begin
     if (cCube.EdgeParityEven and not cCube.CornParityEven) or  //check parity
        (cCube.CornParityEven and not cCube.EdgeParityEven) then
     begin
-      if not auto then Application.MessageBox(PChar(Err[3]),'Facelet Editor',MB_ICONWARNING);
+      // if not auto then Application.MessageBox(PChar(Err[3]),'Facelet Editor',MB_ICONWARNING);
       ci:=PFace^[EF[UF,0]];
       PFace^[EF[UF,0]]:=PFace^[EF[DF,0]];
       PFace^[EF[DF,0]]:=ci;
@@ -871,13 +864,12 @@ end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //+++++++++++++++++++++++sort of copy-constructor+++++++++++++++++++++++++++++++
-constructor FaceletCube.Create(fc: FaceletCube; cvas:TCanvas;x,y,size:Integer;t:Integer);
+constructor FaceletCube.Create(fc: FaceletCube; t:Integer);
 var i:Face; j: TurnAxis;
 begin
- Create(cvas);
+//  Create(cvas);
  for i:=U1 to B9 do PFace^[i]:=fc.PFace^[i];
  for j:= U to B do  cenTwist[j]:=fc.cenTwist[j];
- self.size:=size;self.x:=x;self.y:=y;
  runOptimal:=fc.runOptimal;
  optManeuver:=fc.optManeuver;
  maneuver:=fc.maneuver;
@@ -889,11 +881,10 @@ begin
 end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-constructor FaceletCube.Create(fc: FaceletCube; cvas:TCanvas;x,y,size:Integer;
-            t:Integer;ctw:CenterTwist);
+constructor FaceletCube.Create(fc: FaceletCube;t:Integer;ctw:CenterTwist);
 var i: TurnAxis;
 begin
- Create(fc,cvas,x,y,size,t);
+ Create(fc,t);
  isOriented:=true;
  for i:= U to B do  cenTwist[i]:=ctw[i];
 end;
@@ -961,9 +952,9 @@ end;
 
 //+++++++++++++++++check if two faceletcubes are isomorohic+++++++++++++++++++++
 //onlyCorners: Es werden nur die Ecken untersucht
-//onlyNormal: Es werden nur die Symmetrien genommen, in deren Gruppe die ausgewählte Symmetriegruppe
-//normal ist, d.h. x^-1Hx=H für alle in Frage kommenden Symmetrien x.
-//alsoInverse führt die Untersuchung auch für inversen Cubes durch
+//onlyNormal: Es werden nur die Symmetrien genommen, in deren Gruppe die ausgewï¿½hlte Symmetriegruppe
+//normal ist, d.h. x^-1Hx=H fï¿½r alle in Frage kommenden Symmetrien x.
+//alsoInverse fï¿½hrt die Untersuchung auch fï¿½r inversen Cubes durch
 function FaceletCube.IsIsomorphic(f: FaceletCube; onlyCorners, onlyNormal,alsoInverse:Boolean): Boolean;
 var urf3,fx2,ux4,lr2,index:Integer; i:Face; isEqual:Boolean;
 c: CubieCube; finv:FaceletCube;
@@ -992,7 +983,7 @@ begin
               case i of
                U2,U4,U6,U8,R2,R4,R6,R8,F2,F4,F6,F8,D2,D4,D6,D8,L2,L4,L6,L8,B2,B4,B6,B8: continue;
               end;
-              if PFace^[i]<>f.PFace^[i] then begin isEqual:=false;break;end;//nächste Symmetrie nehmen
+              if PFace^[i]<>f.PFace^[i] then begin isEqual:=false;break;end;//nï¿½chste Symmetrie nehmen
            end;
 
            if isOriented
@@ -1000,7 +991,7 @@ begin
              if cenTwist[k]<>f.cenTwist[k] then begin isEqual:=false;break;end;
 
            if isEqual  then begin Result:=true; goto ende;end;
- //          Result:=false; goto ende;//Patch, wenn nur Identische geprüft werden sollen
+ //          Result:=false; goto ende;//Patch, wenn nur Identische geprï¿½ft werden sollen
 weiter:    Inc(index);
            Conjugate(S_LR2);
          end;
@@ -1014,10 +1005,10 @@ weiter:    Inc(index);
 ende:
   for i:=U1 to B9 do PFace^[i]:=FaceOrig[i];//restore
   for k:= U to B do cenTwist[k]:=ctTemp[k];
-  if alsoInverse and (Result=false) then //noch bzgl. der Inversen prüfen
+  if alsoInverse and (Result=false) then //noch bzgl. der Inversen prï¿½fen
   begin
     c:=CubieCube.Create(f);
-    finv:=FaceletCube.Create(nil);
+    finv:=FaceletCube.Create();
     CornInv(c.PCorn^,c.PCornTemp^);
     EdgeInv(c.PEdge^,c.PEdgeTemp^);
     CentInv(c.PCent^,c.PCentTemp^);

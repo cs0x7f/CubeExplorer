@@ -2,7 +2,7 @@ unit Search;
 
 interface
 
-uses CubeDefs,Symmetries,CordCube,graphics,classes;
+uses CubeDefs,Symmetries,CordCube,classes;
 {$IF not QTM}
 const MAXNODES = 31;
 {$ELSE}
@@ -31,9 +31,9 @@ type
     UDCentRFLBMod2Twist,RLCentRFLBMod2Twist,FBCentRFLBMod2Twist:Integer;
 
     //UDSlice,RLSlice,FBSlice: Integer;
-    nodenum: Int64;//Anzahl der Züge, um diese Tiefe zu vollenden
+    nodenum: Int64;//Anzahl der Zï¿½ge, um diese Tiefe zu vollenden
     {$IF QTM}
-    virtualmove: Boolean;//true wenn in Phase2 in Zug R,F,L,B,Rs,Fs ausgeführt wird
+    virtualmove: Boolean;//true wenn in Phase2 in Zug R,F,L,B,Rs,Fs ausgefï¿½hrt wird
     {$IFEND}
   end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -67,7 +67,7 @@ procedure CreateGetPruningLengthTable;
 
 implementation
 
-uses RubikMain,CubiCube,SysUtils,Windows,CosetExp,InComp;
+uses CubiCube,SysUtils;
 
 
 //+++++++++++create an IDA-object from a cube on coordinate level+++++++++++++++
@@ -76,7 +76,7 @@ begin
 
   inherited Create(true);//thread issues
   Priority:=tpLower;
-  if Form1.FreeThreadsonTerminate1.Checked then FreeOnTerminate:= true;
+  // if Form1.FreeThreadsonTerminate1.Checked then FreeOnTerminate:= true;
 
   isOriented:=cc.isOriented;
 
@@ -180,10 +180,10 @@ var np,np1,np2: ^Node;
     t_sym:Int64;
 label incPower,turn,right,incAxis,checkNeighbourAxis,left,ende;
 begin
-  PostMessage(Form1.Handle,WM_NEXTLEVEL,Integer(self),depth+1);
+  // PostMessage(Form1.Handle,WM_NEXTLEVEL,Integer(self),depth+1);
   maxLength:=maxLen;
   np:= @n[depth];
-  r_depth:=0; //r_depth zählt die noch zu besetzenden freien Felder rechts (mit wachsendem Index)
+  r_depth:=0; //r_depth zï¿½hlt die noch zu besetzenden freien Felder rechts (mit wachsendem Index)
 
 incPower:
   Inc(np^.power);
@@ -212,7 +212,7 @@ turn:
   m:= Move(3*Ord(np^.axis) + np^.power - 1);
 
 {$IF  UHUGE} //UltraHuge Solver
-  if USES_BIG and not isOriented then   //Ultrabig Solver  für orientierte Cubes lansamer als Standard
+  if USES_BIG and not isOriented then   //Ultrabig Solver  fï¿½r orientierte Cubes lansamer als Standard
   begin
 
     if isOriented then
@@ -282,10 +282,10 @@ turn:
     if not Terminated then
     begin
  {$IF QTM}
-      if (not slicemode) and not (Odd(r_depth) xor np1^.parityEven) then goto incAxis;//im slicemode ändern manche Züge nicht die Parität der Ecken!
+      if (not slicemode) and not (Odd(r_depth) xor np1^.parityEven) then goto incAxis;//im slicemode ï¿½ndern manche Zï¿½ge nicht die Paritï¿½t der Ecken!
  {$IFEND}
 
-//Es kann gefolgert werden, dass der Pruningwert eins höher ist, wenn alle gleich sind.
+//Es kann gefolgert werden, dass der Pruningwert eins hï¿½her ist, wenn alle gleich sind.
       if (r_depth>0) and (np1^.UDPrunBig=np1^.RLPrunBig)
                      and (np1^.RLPrunBig=np1^.FBPrunBig) then
       begin
@@ -308,7 +308,7 @@ turn:
     end;
 
   {$ELSE} //Huge Solver
-  if USES_BIG and not isOriented then //auch nicht für oriented cubes
+  if USES_BIG and not isOriented then //auch nicht fï¿½r oriented cubes
   begin
     np1^.UDTwist:= TwistMove[np^.UDTwist,m];
     x:= UDSliceSortedSymMove[np^.UDSliceSortedSymIdx,SymMove[np^.UDSliceSortedSymSym,m]];
@@ -350,13 +350,13 @@ turn:
     if not Terminated then
     begin
  {$IF QTM}
-      if (not slicemode) and not (Odd(r_depth) xor np1^.parityEven) then goto incAxis;//im slicemode ändern manche Züge nicht die Parität der Ecken!
+      if (not slicemode) and not (Odd(r_depth) xor np1^.parityEven) then goto incAxis;//im slicemode ï¿½ndern manche Zï¿½ge nicht die Paritï¿½t der Ecken!
  {$IFEND}
 //if we do the three possible moves on some fixed face in FTM, the three pruning value
 //can only differ by 1
 
 //Wie beim Huge Solver kann gefolgert werden, dass der Pruning
-//Wert eins höher ist, wenn alle gleich sind.
+//Wert eins hï¿½her ist, wenn alle gleich sind.
       if (r_depth>0) and (np1^.UDPrunBig=np1^.RLPrunBig)
                      and (np1^.RLPrunBig=np1^.FBPrunBig) then
       begin
@@ -377,19 +377,19 @@ turn:
     end;
     {$IFEND} //Huge Optimal Solver
   end
-  else//standard optimal solver, löst auch oriented cubes
+  else//standard optimal solver, lï¿½st auch oriented cubes
   begin
 
     if isOriented then
     begin
 
-      np1^.UDSliceSorted:= UDSliceSortedMove[np^.UDSliceSorted,m];//für das Pruning aus UDSliceSorted und UDcenTwist 11880*4096
+      np1^.UDSliceSorted:= UDSliceSortedMove[np^.UDSliceSorted,m];//fï¿½r das Pruning aus UDSliceSorted und UDcenTwist 11880*4096
       np1^.UDcenTwist:= CentOriMove[np^.UDcenTwist,m];
 
       np1^.UDTwist:= TwistMove[np^.UDTwist,m];
       np1^.UDCentRFLBMod2Twist:= CentOriRFLBMod2Move[np^.UDCentRFLBMod2Twist,m];
 
-      x:= flipSliceMove[np^.UDIdx,Ord(SymMove[np^.UDSym,m])];//wird für das Pruning aus flipslice, twist und centrflbMod2 gebraucht
+      x:= flipSliceMove[np^.UDIdx,Ord(SymMove[np^.UDSym,m])];//wird fï¿½r das Pruning aus flipslice, twist und centrflbMod2 gebraucht
       np1^.UDSym:=SymMult[x and 15,np^.UDSym];
       np1^.UDIdx:= x shr 4;
 
@@ -463,10 +463,10 @@ turn:
 
     begin
  {$IF QTM}
-      if (not slicemode) and not (Odd(r_depth) xor np1^.parityEven) then goto incAxis;//im slicemode ändern manche Züge nicht die Parität der Ecken!
+      if (not slicemode) and not (Odd(r_depth) xor np1^.parityEven) then goto incAxis;//im slicemode ï¿½ndern manche Zï¿½ge nicht die Paritï¿½t der Ecken!
  {$IFEND}
 //Wie beim Huge Solver kann gefolgert werden, dass der Pruning
-//Wert eins höher ist, wenn alle gleich sind.
+//Wert eins hï¿½her ist, wenn alle gleich sind.
       if (r_depth>0) and (np1^.UDPrun=np1^.RLPrun)
                      and (np1^.RLPrun=np1^.FBPrun) then
       begin
@@ -505,20 +505,20 @@ turn:
       t_sym:= t_sym shr 1;
       if not odd(t_sym) then continue;
       np1:=np;
-//zunächst mal die Bilder berechnen
+//zunï¿½chst mal die Bilder berechnen
       for j:=fixNum downto 0 do Dec(np1);
 
-      //Züge werden verworfen, wenn die lex. Ordnung einer Transformation kleiner ist.
-      //Die Reihenfolge für parallele Achsen kann durch die  Transf. vertauscht sein, das erhöht aber
-      //immer die lex. Ordnung. Es kann also höchstens passieren, dass ein Zug nicht
-      //verworfen wird, obwohl es möglich wäre.
+      //Zï¿½ge werden verworfen, wenn die lex. Ordnung einer Transformation kleiner ist.
+      //Die Reihenfolge fï¿½r parallele Achsen kann durch die  Transf. vertauscht sein, das erhï¿½ht aber
+      //immer die lex. Ordnung. Es kann also hï¿½chstens passieren, dass ein Zug nicht
+      //verworfen wird, obwohl es mï¿½glich wï¿½re.
       //Man kann sich klarmachen, dass man nicht nur die Potenz, sondern immer
       //auch die Achse (zumindest in FTM) verwerfen kann!
       //Der lex. Unterschied ist immer! in der letzten Stelle, falls die Transf. kleiner,
-      //sonst wäre er ja schon vorher erkannt worden.
+      //sonst wï¿½re er ja schon vorher erkannt worden.
       //Dann ist die Achse des Bildes kleiner oder die Potenz, falls die Achse die
       //gleiche ist. Dann kommt aber nur x^3 -> x^1 in Frage, und dann wird die Achse
-      //im nächsten Zug sowieso erhöht.
+      //im nï¿½chsten Zug sowieso erhï¿½ht.
       for j:= 0 to fixNum do
       begin
         Inc(np1);
@@ -526,8 +526,8 @@ turn:
          m1:= SymMove[i,m];
       if  m1 < m then                                                 ///////////////////////////////////////////////
         goto  incAxis  //kleiner, verwerfen
-             else if m1 > m then break;//größer
-        //bei Gleichheit nächste Stelle untersuchen
+             else if m1 > m then break;//grï¿½ï¿½er
+        //bei Gleichheit nï¿½chste Stelle untersuchen
       end;
     end;//i
   end;//if sym>1
@@ -542,7 +542,7 @@ turn:
       goto ende;
     end;
   {$IF SPECIAL4}
-    if depth>12 then //bei 13 ist maximale Länge 14
+    if depth>12 then //bei 13 ist maximale Lï¿½nge 14
     begin
       returnLength:=0;
       Result:=returnLength; //abort
@@ -557,7 +557,7 @@ turn:
       returnLength:=depth+1;
       Result:=returnLength; //solution
           n[depth+1].nodenum:=nodecount;
-      PostMessage(Form1.Handle,WM_NEXTLEVEL,Integer(self),depth+100);//TForm1.ShowNextLevel
+      // PostMessage(Form1.Handle,WM_NEXTLEVEL,Integer(self),depth+100);//TForm1.ShowNextLevel
     goto ende;
   end;
 right:
@@ -622,7 +622,7 @@ left:
     end;
     Inc(depth);Inc(r_depth);
     n[depth].nodenum:=nodecount;
-    PostMessage(Form1.Handle,WM_NEXTLEVEL,Integer(self),depth+1);//Communicate
+    // PostMessage(Form1.Handle,WM_NEXTLEVEL,Integer(self),depth+1);//Communicate
 
     np^.axis:=U;
     np^.power:=1;
@@ -647,17 +647,17 @@ var i: Integer;
 
 begin
 
-  if isOriented then //dann wird im Augenblick nur der Standardsolver verwendet, da die großen nichts bringen
+  if isOriented then //dann wird im Augenblick nur der Standardsolver verwendet, da die groï¿½en nichts bringen
   begin
     for i:=invalid to depth do
     begin
       m:= Move(3*Ord(n[i].axis) + n[i].power - 1);
 
- //     n[i+1].UDcenTwist:= CentOriMove[n[i].UDcenTwist,m]; //beim Standard Solver nicht nötig
+ //     n[i+1].UDcenTwist:= CentOriMove[n[i].UDcenTwist,m]; //beim Standard Solver nicht nï¿½tig
 
       n[i+1].cornPos:=CornPermMove[n[i].cornPos,m];
 
- //     n[i+1].UDSliceSorted:=UDSliceSortedMove[n[i].UDSliceSorted,m]; //wird beim Standardsolver mit Orientierung mitgeführt
+ //     n[i+1].UDSliceSorted:=UDSliceSortedMove[n[i].UDSliceSorted,m]; //wird beim Standardsolver mit Orientierung mitgefï¿½hrt
  //     m:= SymMove[16,m];
  //     n[i+1].RLSliceSorted:=UDSliceSortedMove[n[i].RLSliceSorted,m];
  //     m:= SymMove[16,m];
@@ -672,7 +672,7 @@ begin
 
       n[i+1].cornPos:=CornPermMove[n[i].cornPos,m];
 
-      n[i+1].UDSliceSorted:=UDSliceSortedMove[n[i].UDSliceSorted,m]; //Nötig bei Standardsolver ohne Orientierung und beim UHUGE solver
+      n[i+1].UDSliceSorted:=UDSliceSortedMove[n[i].UDSliceSorted,m]; //Nï¿½tig bei Standardsolver ohne Orientierung und beim UHUGE solver
       m:= SymMove[16,m];
       n[i+1].RLSliceSorted:=UDSliceSortedMove[n[i].RLSliceSorted,m];
       m:= SymMove[16,m];
@@ -774,6 +774,7 @@ phase2:
 
 
     NextPhase2ID;
+    // writeln(depth2);
 
 
     case depth2 of
@@ -1063,7 +1064,7 @@ end;
 //++++++++++++++++++++Find a Phase 2 solution+++++++++++++++++++++++++++++++++++
 {$IF not QTM}
 procedure IDA.NextPhase2ID;
-var temp,i,r_depth,symCPos,sym: Integer;
+var temp,i,r_depth,symCPos,_sym: Integer;
      m: Move; np,np1,np2: ^Node;
 label ende,incPower,incAxis,turn,idCheck,right,checkNeighbourAxis,left,xxx;
 begin
@@ -1098,8 +1099,8 @@ begin
    n[i+1].FBSliceSorted:=UDSliceSortedMove[n[i].FBSliceSorted,m];
  end;
  inValid:=depth;
-//bei orientierten Würfeln muss die Parität der UDSlice*2 mit der Summe der RFLB
-//centertwists mod4 übereinstimmen!
+//bei orientierten Wï¿½rfeln muss die Paritï¿½t der UDSlice*2 mit der Summe der RFLB
+//centertwists mod4 ï¿½bereinstimmen!
  if isOriented then
  begin
    if (UDSliceParity[np^.UDSliceSorted] xor RFLBCentOriParity[np^.UDCenTwist]=1)
@@ -1156,9 +1157,9 @@ turn:
   np1^.cornPos:= CornPermMove[np^.cornPos,m];
   np1^.edge8Pos:= Edge8PermMove[np^.edge8Pos,m];
   symCPos:= CornPosToSymCornPos[np1^.cornPos];
-  sym:= symCPos and $f;
+  _sym:= symCPos and $f;
   symCPos:=symCPos shr 4;
-  np1^.UDPrun:= GetPruningLength[np^.UDPrun,GetPruningPhase2P(2768*Edge8PosConjugate[np1^.edge8Pos,sym] + symCPos)];
+  np1^.UDPrun:= GetPruningLength[np^.UDPrun,GetPruningPhase2P(2768*Edge8PosConjugate[np1^.edge8Pos,_sym] + symCPos)];
 
   if (np1^.UDPrun>r_depth+1) then goto incAxis;
   if (np1^.UDPrun>r_depth) then goto incPower;
@@ -1241,7 +1242,7 @@ left:
   begin
     nodeCount:=0;
       //warum nur wenn isoriented?
-    if isOriented and (depth2>9) then  //ignore solutions with phase2length>10  !!!!!!für phase2 Demos auf 30 erhöhen!!!!!!!!!!!!!
+    if isOriented and (depth2>9) then  //ignore solutions with phase2length>10  !!!!!!fï¿½r phase2 Demos auf 30 erhï¿½hen!!!!!!!!!!!!!
     begin
       depth2:=-2;//use this to signal no solution
       goto ende
@@ -1270,7 +1271,7 @@ end;
 {$ELSE}
 
 procedure IDA.NextPhase2ID;
-var temp,i,r_depth,symCPos,sym: Integer;
+var temp,i,r_depth,symCPos,_sym: Integer;
      m: Move; np,np1,np2: ^Node;
 label ende,incPower,incAxis,turn,idCheck,right,checkNeighbourAxis,left,xxx;
 begin
@@ -1285,7 +1286,7 @@ begin
  temp:= PruningCornPermPh2[np^.cornPos];
 
  if temp> maxLength-(depth+1)+2 then begin depth2:=-3; goto ende; end;//no solution, new axis
- if temp> maxLength-(depth+1)+1 then begin depth2:=-2; goto ende; end;//no solution, new power, da von U nach Ù' sich die Länge in Phase 1 um 2 verändern kann
+ if temp> maxLength-(depth+1)+1 then begin depth2:=-2; goto ende; end;//no solution, new power, da von U nach ï¿½' sich die Lï¿½nge in Phase 1 um 2 verï¿½ndern kann
  if temp> maxLength-(depth+1) then begin depth2:=-2; goto ende; end;//no solution, new power
 
 
@@ -1305,8 +1306,8 @@ begin
    n[i+1].FBSliceSorted:=UDSliceSortedMove[n[i].FBSliceSorted,m];
  end;
  inValid:=depth;
-//bei orientierten Würfeln muss die Parität der UDSlice*2 mit der Summe der RFLB
-//centertwists mod4 übereinstimmen!
+//bei orientierten Wï¿½rfeln muss die Paritï¿½t der UDSlice*2 mit der Summe der RFLB
+//centertwists mod4 ï¿½bereinstimmen!
  if isOriented then
  begin
    if (UDSliceParity[np^.UDSliceSorted] xor RFLBCentOriParity[np^.UDCenTwist]=1)
@@ -1316,7 +1317,7 @@ begin
 // np:= @n[depth+1];
  np^.edge8Pos:= GetEdge8Perm[np^.RLSliceSorted,np^.FBSliceSorted mod 24];
 
- if isOriented and (np^.UDCenTwist<>0) then goto xxx;  //Keine Identität
+ if isOriented and (np^.UDCenTwist<>0) then goto xxx;  //Keine Identitï¿½t
 
  if  (np^.edge8Pos=0) and  (np^.UDSliceSorted=0) and (np^.cornPos=0) then
  begin
@@ -1334,11 +1335,11 @@ xxx:
 // temp:= PruningCenTwistUDSliceSorted[np^.UDSliceSorted shl 12 +np^.UDcenTwist];
 
  if temp> maxLength-(depth+1)+2 then begin depth2:=-3; goto ende; end;//no solution, new axis
- if temp> maxLength-(depth+1)+1 then begin depth2:=-2; goto ende; end;//no solution, new power, da von U nach U' sich die Länge in Phase 1 um 2 verändern kann
+ if temp> maxLength-(depth+1)+1 then begin depth2:=-2; goto ende; end;//no solution, new power, da von U nach U' sich die Lï¿½nge in Phase 1 um 2 verï¿½ndern kann
  if temp> maxLength-(depth+1) then begin depth2:=-2; goto ende; end;//no solution, new power
 
 
- if not slicemode then// im Us,Rs,Fs ändern die Parität nicht
+ if not slicemode then// im Us,Rs,Fs ï¿½ndern die Paritï¿½t nicht
  begin
    if (n[0].parityEven and Odd(depth)) or (not n[0].parityEven and not Odd(depth))then
    begin
@@ -1374,7 +1375,7 @@ incPower:
   if (np^.power>3) then goto incAxis;
 
 //  np1:=np; Dec(np1);
-//  if {(depth<>r_depth){have left neigbour and}(np1^.axis=np^.axis)//linker Nachbar ist immer vorhanden, da Phase 1 immer eine Lösung hat
+//  if {(depth<>r_depth){have left neigbour and}(np1^.axis=np^.axis)//linker Nachbar ist immer vorhanden, da Phase 1 immer eine Lï¿½sung hat
 //       and ((np1^.power=3) or (np^.power=3)) then goto incAxis;
    //only X*X, not X*X',X'*X or X'*X'
 
@@ -1397,8 +1398,8 @@ turn: //nicht bei virtual moves
   m:= Move(3*Ord(np^.axis) + np^.power - 1);
   if np.virtualmove then
   begin
-    if r_depth=0 then goto incAxis;//keine Lösung mit virtuellem Zug am Ende  falsch, nur neue Achse!!!
-    np1^.cornPos:= np^.cornPos; //Koordinaten einfach übertragen
+    if r_depth=0 then goto incAxis;//keine Lï¿½sung mit virtuellem Zug am Ende  falsch, nur neue Achse!!!
+    np1^.cornPos:= np^.cornPos; //Koordinaten einfach ï¿½bertragen
     np1^.edge8Pos:= np^.edge8Pos;
     goto right;
   end;
@@ -1406,16 +1407,16 @@ turn: //nicht bei virtual moves
   np1^.cornPos:= CornPermMove[np^.cornPos,m];
   np1^.edge8Pos:= Edge8PermMove[np^.edge8Pos,m];
   symCPos:= CornPosToSymCornPos[np1^.cornPos];
-  sym:= symCPos and $f;
-  symCPos:=symCPos shr 4;//die Äquivalenzklasse
-  temp:= 2768*Edge8PosConjugate[np1^.edge8Pos,sym] + symCPos;
+  _sym:= symCPos and $f;
+  symCPos:=symCPos shr 4;//die ï¿½quivalenzklasse
+  temp:= 2768*Edge8PosConjugate[np1^.edge8Pos,_sym] + symCPos;
   if Odd(temp)
   then np1^.UDPrun:= 2*(PruningPhase2Q[temp div 2] shr 4) + PruningPhase2Q[2768*40320 div 2 +symCPos]
   else np1^.UDPrun:= 2*(PruningPhase2Q[temp div 2] and $f) + PruningPhase2Q[2768*40320 div 2+symCPos] ;
 
-//  np1^.UDPrun:= GetPruningLength[np^.UDPrun,GetPruningPhase2P(2768*Edge8PosConjugate[np1^.edge8Pos,sym] + symCPos)];
+//  np1^.UDPrun:= GetPruningLength[np^.UDPrun,GetPruningPhase2P(2768*Edge8PosConjugate[np1^.edge8Pos,_sym] + symCPos)];
 
-  if (np1^.UDPrun>r_depth+2) then goto incAxis; //kommt bei RR FF LL unb BB häufig vor!
+  if (np1^.UDPrun>r_depth+2) then goto incAxis; //kommt bei RR FF LL unb BB hï¿½ufig vor!
   if (np1^.UDPrun>r_depth) then goto incPower;
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1555,10 +1556,11 @@ label l1;
 begin
  i:=0;
  depth1:=returnlength-1;
+ s:='';
+ s1:='';
 
  while i<depth1+1 do
  begin
-
    case n[i].axis of
      U: s:=s+'U';
      R: s:=s+'R';
@@ -1578,7 +1580,7 @@ begin
   ln:=' ('+IntToStr(depth1+1)+manSep+')';
 
 
- //jetzt für den Fall useSlices das Maneuver berechnen
+ //jetzt fï¿½r den Fall useSlices das Maneuver berechnen
 
  for t:=U to B do curAx[t]:=t;
 
@@ -1600,7 +1602,7 @@ begin
    p:= n[i].power;
    if invertPower then p:=4-p;
      s1:=s1+numToStr(p);
- //jetzt den Würfel entsprechend drehen.
+ //jetzt den Wï¿½rfel entsprechend drehen.
    if n[i].axis >B then //slicemoves
      case t of
        U:
@@ -1719,10 +1721,14 @@ begin
   else
   repeat
   Next2PhaseSolution;
+  writeln(self.SolverString);
+  writeln('return length: ',returnlength);
+  writeln('stopAt: ',stopAt);
+  maxLength:=returnLength-1;
   {$IF not QTM}
   until returnlength<=stopAt+3;
   {$ELSE}
-  until returnlength<=stopAt+17; //Drüber wird keine Lösung angezeigt!!
+  until returnlength<=stopAt+17; //Drï¿½ber wird keine Lï¿½sung angezeigt!!
   {$IFEND}
 end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1800,3 +1806,4 @@ end;
 
 
 end.
+

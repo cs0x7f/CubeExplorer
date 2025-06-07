@@ -2,12 +2,26 @@ unit CubeDefs;
 
 interface
 
-uses Graphics,syncobjs;
+const sliceMode = false;
 
+const useSlices = false;
 
-const QTM = false;//Für HTM auf false setzen
+const log = true;
 
-const SPECIAL4 = false;//Spezielle Version für Phase3 von 4x4x4 Würfel
+const curSymNormal = 1;
+
+const manSep = 'f';
+
+const useHuge = false;
+
+const QTM = false;//Fï¿½r HTM auf false setzen
+
+var Terminate :boolean = false;
+
+const SPECIAL4 = false;//Spezielle Version fï¿½r Phase3 von 4x4x4 Wï¿½rfel
+
+function numToStr(n: Integer):String ;
+procedure logging(s: String);
 
 {$IF QTM}
 const vers='QTM';
@@ -21,8 +35,8 @@ const curVersion = 'Cube Explorer 5.15 '+vers;
 const copyright = '(c) H.Kociemba 2019';
 const UHUGE = True;//Ultrahuge solver, jetzt Standardversion
 
-const BatchTimeInverval  = 1000;//Abstände bei Autorun, default 1000
-const OptimalMax = 27; //Höchstzahl der Züge beim optimalen Solver, default bei twophase MAXNODES
+const BatchTimeInverval  = 1000;//Abstï¿½nde bei Autorun, default 1000
+const OptimalMax = 27; //Hï¿½chstzahl der Zï¿½ge beim optimalen Solver, default bei twophase MAXNODES
 
 //const picAdr = '<img src="faces/';   dies bedeutet lokal vom Server
 const picAdr = '<img src="http://home.t-online.de/home/Kociemba/faces/';
@@ -31,10 +45,10 @@ const picAdr = '<img src="http://home.t-online.de/home/Kociemba/faces/';
 //Two-Phase-Algorithm is best suited for the FTM.
 //const USE_INDY = true;
 
-//const STATISTICS = false;//Statistiken erzeugen, normalerweise false
-const FULLPHASE2 = false;//Code für die Analyse von Phase2, normalerweise false setzen!
-const PRIVAT = false;//normalerweise false, für spezielle Routinen die nicht öffentlich sind
-const CUBE20STUFF = true;//Für spezielle Berechnungen des cube20 Projekts
+const STATISTICS = false;//Statistiken erzeugen, normalerweise false
+const FULLPHASE2 = false;//Code fï¿½r die Analyse von Phase2, normalerweise false setzen!
+const PRIVAT = false;//normalerweise false, fï¿½r spezielle Routinen die nicht ï¿½ffentlich sind
+const CUBE20STUFF = true;//Fï¿½r spezielle Berechnungen des cube20 Projekts
 
 type
   TurnAxis =(U,R,F,D,L,B,Us,Rs,Fs,E,M,S);//Hoffentlich keine Komplikationen mit EMS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -117,7 +131,7 @@ const
    13107{D_2h(face)},153{C_2v(a1)},1665{C_2v(b)},9225{C_2h(b)},17425{D_2(edge)},85{C_4},4369{D_2(face)},
    34833{S_4},8721{C_2h(a)},51{C_2v(a2)},4295032833{C_3},129{C_s(b)},1025{C_2(b)},17{C_2(a)},
    513{C_s(a)},8193{C_i},1{C_1},3{Cs(a)*},9{Cs(b)*});
-   //* ist für Antisymmetrie, die hier andere Orientierung hat, siehe TImageList
+   //* ist fï¿½r Antisymmetrie, die hier andere Orientierung hat, siehe TImageList
 
    ImageSymNames: array [0..34] of String =
    ('Oh','O','Td','D3d','Th','C3v','T','D4h','D3','D4','D2d(face)','C4v','C4h',
@@ -252,7 +266,7 @@ const
     (c:DFR;o:0),(c:UFL;o:2),(c:DLF;o:1),(c:DRB;o:0)),
    ((c:URF;o:0),(c:UFL;o:0),(c:UBR;o:1),(c:DRB;o:2),  //B
     (c:DFR;o:0),(c:DLF;o:0),(c:ULB;o:2),(c:DBL;o:1)),
-   ((c:UBR;o:0),(c:URF;o:0),(c:UFL;o:0),(c:ULB;o:0),  //Us    PRÜFEN!!!
+   ((c:UBR;o:0),(c:URF;o:0),(c:UFL;o:0),(c:ULB;o:0),  //Us    PRï¿½FEN!!!
     (c:DRB;o:0),(c:DFR;o:0),(c:DLF;o:0),(c:DBL;o:0)),
    ((c:DFR;o:2),(c:DLF;o:1),(c:UFL;o:2),(c:URF;o:1),  //Rs
     (c:DRB;o:1),(c:DBL;o:2),(c:ULB;o:1),(c:UBR;o:2)),
@@ -291,7 +305,7 @@ const
    (e:FL;o:0),(e:DB;o:0),(e:FR;o:0),(e:UL;o:0),(e:DL;o:0),(e:BR;o:0)),
   ((e:UR;o:0),(e:UF;o:0),(e:UL;o:0),(e:BR;o:1),(e:DR;o:0),(e:DF;o:0),  //B
    (e:DL;o:0),(e:BL;o:1),(e:FR;o:0),(e:FL;o:0),(e:UB;o:1),(e:DB;o:1)),
-  ((e:UB;o:0),(e:UR;o:0),(e:UF;o:0),(e:UL;o:0),(e:DB;o:0),(e:DR;o:0),  //Us PRÜFEN
+  ((e:UB;o:0),(e:UR;o:0),(e:UF;o:0),(e:UL;o:0),(e:DB;o:0),(e:DR;o:0),  //Us PRï¿½FEN
    (e:DF;o:0),(e:DL;o:0),(e:FR;o:0),(e:FL;o:0),(e:BL;o:0),(e:BR;o:0)),
   ((e:FR;o:0),(e:UF;o:0),(e:FL;o:0),(e:UB;o:0),(e:BR;o:0),(e:DF;o:0),  //Rs
    (e:BL;o:0),(e:DB;o:0),(e:DR;o:0),(e:DL;o:0),(e:UL;o:0),(e:UR;o:0)),
@@ -389,11 +403,10 @@ const
   '3. Read the help file for more details!'
 );
 
-var Color: array [UCol..NoCol] of TColor; //Global colours of Cube
-    stopAt,autoTime: Integer;//Two Phase Algorithm Options dialog
+var stopAt,autoTime: Integer;//Two Phase Algorithm Options dialog
     useTriple:Boolean;//flag for triple search
-    checkIsomorphics,USES_BIG: Boolean;//prüfen ob beim Hinzufügen auf Isomorphie geprüft wird
-                                        //falls InvIsomorphics gesetzt auch die Inversen auf Isomorphie überprüfen
+    checkIsomorphics,USES_BIG: Boolean;//prï¿½fen ob beim Hinzufï¿½gen auf Isomorphie geprï¿½ft wird
+                                        //falls InvIsomorphics gesetzt auch die Inversen auf Isomorphie ï¿½berprï¿½fen
                                        //USES_BIG, Flag ob der Big Solver verwendet wird.
 
 
@@ -406,6 +419,24 @@ var Color: array [UCol..NoCol] of TColor; //Global colours of Cube
 
 
 implementation
+
+function numToStr(n: Integer):String ;
+var s: String;
+begin
+   s:='';
+   case n of
+     1: s:=s+' ';
+     2: s:=s+'2 ';
+     3: s:=s+chr(39)+' ';
+   end;
+   result:= s;
+end;
+
+procedure logging(s: String);
+begin
+   if log then
+      writeln(s);
+end;
 
 //+++++++++++++++++++++Multiplication of corner permutations++++++++++++++++++++
 procedure CornMult(a,b:CornerCubie;var prod:CornerCubie);

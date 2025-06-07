@@ -20,7 +20,7 @@ procedure CreateSymmetryTables;
 function MT(m:String;sym:Symmetry):String;
 
 implementation
-uses CubiCube,SysUtils,RubikMain;
+uses CubiCube,SysUtils;
 
 //++++++++++++++++inititalize arrays CornSym and EdgeSym++++++++++++++++++++++++
 procedure CreateSymmetries;
@@ -162,7 +162,7 @@ var t: array[' '..'z'] of Char;s,r:String;
     mv:set of 'B'..'z';i,n:Integer;
     foundMove: Boolean;
 //Kleinbuchstaben e,m,a symbolisieren  inverse Richtungen von E,M,S, a statt s wg. z.B. (17s)
-//Großbuchstaben X,Y,Z symbolisieren  inverse Richtungen von x,y,z
+//Groï¿½buchstaben X,Y,Z symbolisieren  inverse Richtungen von x,y,z
 begin
 
   s:=m;

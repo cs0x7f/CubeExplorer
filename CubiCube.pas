@@ -1,7 +1,7 @@
 unit CubiCube;
 
 interface
-uses Graphics, CubeDefs, FaceCube, Symmetries;
+uses CubeDefs, FaceCube, Symmetries;
 type
 //++++++++++Class representing the Cube on the Cubie Level++++++++++++++++++++++
   CubieCube = Class
@@ -21,7 +21,7 @@ type
      constructor Create; overload;
      constructor Create(fc: FaceletCube); overload;
      constructor Create(cp,co,ep,eo,cno:Integer); overload;
-     procedure Print(c:TCanvas;x,y:Longint);
+     procedure Print();
 
 
      function CentOriRFLBMod2Coord: Word;
@@ -110,10 +110,10 @@ type
      function TetraCoord: Word;
      procedure InvTetraCoord(w:Word);
 
-     //++++++++++für Coset-Explorer notwendig++++++++++++++++++++++++++++++++++
-     procedure InvCorn8PermCoord(w:Word);  //immer als letztes aufrufen, da Parität bestimmt wird.
+     //++++++++++fï¿½r Coset-Explorer notwendig++++++++++++++++++++++++++++++++++
+     procedure InvCorn8PermCoord(w:Word);  //immer als letztes aufrufen, da Paritï¿½t bestimmt wird.
 
-     function cube20TetraCoord : Word;//für cube20 Projekt
+     function cube20TetraCoord : Word;//fï¿½r cube20 Projekt
      procedure InvCube20TetraCoord(w: Word);
      function cube20SliceCoord : Word;
      procedure InvCube20SliceCoord(w: Word);
@@ -135,7 +135,7 @@ type
 
 implementation
 
-uses MathFuncs, classes, SysUtils, RubikMain, Forms,CordCube;
+uses MathFuncs, classes, SysUtils, CordCube;
 
 //++++++++Do a move on the cubie-level++++++++++++++++++++++++++++++++++++++++++
 procedure CubieCube.Move(x: TurnAxis);
@@ -208,32 +208,32 @@ begin
 
   for i:=URF to DRB do
   begin
-    if (fc.PFace[CF[i,0]]=NoCol) and (fc.PFace[CF[i,1]]=NoCol) and (fc.PFace[CF[i,2]]=NoCol)
+    if (fc.PFace^[CF[i,0]]=NoCol) and (fc.PFace^[CF[i,1]]=NoCol) and (fc.PFace^[CF[i,2]]=NoCol)
     //empty corner
     then
     begin
       PCorn^[i].c:=NNN;
       PCorn^[i].o:=6;//6 means do not care
     end
-    else if (fc.PFace[CF[i,0]]= OriCol) then begin PCorn^[i].c:=NNN; PCorn^[i].o:=0 end
-    else if (fc.PFace[CF[i,1]]= OriCol) then begin PCorn^[i].c:=NNN; PCorn^[i].o:=1 end
-    else if (fc.PFace[CF[i,2]]= OriCol) then begin PCorn^[i].c:=NNN; PCorn^[i].o:=2 end
+    else if (fc.PFace^[CF[i,0]]= OriCol) then begin PCorn^[i].c:=NNN; PCorn^[i].o:=0 end
+    else if (fc.PFace^[CF[i,1]]= OriCol) then begin PCorn^[i].c:=NNN; PCorn^[i].o:=1 end
+    else if (fc.PFace^[CF[i,2]]= OriCol) then begin PCorn^[i].c:=NNN; PCorn^[i].o:=2 end
     else
     begin
       ori:=0;
-      while ((fc.PFace[CF[i,ori]]<>UCol) and (fc.PFace[CF[i,ori]]<>UColA))
-      and ((fc.PFace[CF[i,ori]]<>DCol) and (fc.PFace[CF[i,ori]]<>DColA)) do inc(ori);
+      while ((fc.PFace^[CF[i,ori]]<>UCol) and (fc.PFace^[CF[i,ori]]<>UColA))
+      and ((fc.PFace^[CF[i,ori]]<>DCol) and (fc.PFace^[CF[i,ori]]<>DColA)) do inc(ori);
       o1:=ori+1; if o1=3 then o1:=0;
-      XCol1:=fc.PFace[CF[i,o1]];
+      XCol1:=fc.PFace^[CF[i,o1]];
       if Ord(XCol1)>=7 then XCol1:=ColorIndex(Ord(XCol1) -7);//>=7 sind die speziellen Farben
       o2:=o1+1;  if o2=3 then o2:=0;
-      XCol2:=fc.PFace[CF[i,o2]];
+      XCol2:=fc.PFace^[CF[i,o2]];
       if Ord(XCol2)>=7 then XCol2:=ColorIndex(Ord(XCol2) -7);
       for j:=URF to DRB do if (XCol1=CCI[j,1]) and (XCol2=CCI[j,2]) then
       begin
         PCorn^[i].c:=j;//corner j sits in corner i's clean cube position
         PCorn^[i].o:=ori;//twist of corner j
-        if Ord(fc.PFace[CF[i,0]])>=7 then PCorn^[i].o:=6;//Orientierung dann egal
+        if Ord(fc.PFace^[CF[i,0]])>=7 then PCorn^[i].o:=6;//Orientierung dann egal
         break;//j
       end;
     end;
@@ -242,40 +242,40 @@ begin
 
   for k:=UR to BR do
   begin
-    if (fc.PFace[EF[k,0]]=NoCol) and (fc.PFace[EF[k,1]]=NoCol)
+    if (fc.PFace^[EF[k,0]]=NoCol) and (fc.PFace^[EF[k,1]]=NoCol)
     //empty corner
     then
     begin
       PEdge^[k].e:=NN;
       PEdge^[k].o:=6;//6 means do not care
     end
-    else if (fc.PFace[EF[k,0]]= OriCol) then begin PEdge^[k].e:=NN; PEdge^[k].o:=0 end
-    else if (fc.PFace[EF[k,1]]= OriCol) then begin PEdge^[k].e:=NN; PEdge^[k].o:=1 end
+    else if (fc.PFace^[EF[k,0]]= OriCol) then begin PEdge^[k].e:=NN; PEdge^[k].o:=0 end
+    else if (fc.PFace^[EF[k,1]]= OriCol) then begin PEdge^[k].e:=NN; PEdge^[k].o:=1 end
     else
     begin
       for m:=UR to BR do
       begin
-        XCol0:=fc.PFace[EF[k,0]];XCol1:=fc.PFace[EF[k,1]];
+        XCol0:=fc.PFace^[EF[k,0]];XCol1:=fc.PFace^[EF[k,1]];
         if Ord(XCol0)>=7 then XCol0:=ColorIndex(Ord(XCol0) -7);
         if Ord(XCol1)>=7 then XCol1:=ColorIndex(Ord(XCol1) -7);
         if (XCol0=ECI[m,0]) and (XCol1=ECI[m,1]) then
         begin
           PEdge^[k].e:=m;//edge m sits in edge k's clean cube position;
           PEdge^[k].o:=0;//no flip
-          if Ord(fc.PFace[EF[k,0]])>=7 then PEdge^[k].o:=6;//Orientierung dann egal
+          if Ord(fc.PFace^[EF[k,0]])>=7 then PEdge^[k].o:=6;//Orientierung dann egal
           break;
         end;
         if (XCol0=ECI[m,1]) and (XCol1=ECI[m,0]) then
         begin
           PEdge^[k].e:=m;
           PEdge^[k].o:=1;//flip
-          if Ord(fc.PFace[EF[k,0]])>=7 then PEdge^[k].o:=6;//Orientierung dann egal
+          if Ord(fc.PFace^[EF[k,0]])>=7 then PEdge^[k].o:=6;//Orientierung dann egal
           break;
         end;
       end;
     end;
   end;
-//jetzt evtl. die Positionen ergänzen, falls nur ein Stein fehlt
+//jetzt evtl. die Positionen ergï¿½nzen, falls nur ein Stein fehlt
   for i:=URF to DRB do co[i]:=0; for k:= UR to BR do ed[k]:=0;
   n:=0;
   for i:=URF to DRB do if PCorn^[i].c=NNN then
@@ -321,13 +321,9 @@ end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //++++++++++++++++++Print CubieCube (debugging only)++++++++++++++++++++++++++++
-procedure CubieCube.Print(c:TCanvas;x,y:Longint);
+procedure CubieCube.Print();
 var i: Corner; var j: Edge; s: string;
 begin
-  c.Brush.Color:=clRed;
-  s:='                                                                                             ';
-  c.TextOut(x,y,s);
-  c.TextOut(x,y+20,s);
   s:='';
   for i:= URF to DRB do
   begin
@@ -341,8 +337,7 @@ begin
     5:  s:=s +'-* ';
     end;
   end;
-
-  c.TextOut(x,y,s);
+  writeln(s);
   s:='';
   for j:= UR to BR do
   begin
@@ -352,12 +347,12 @@ begin
     1:  s:=s+'+';
     end;
   end;
-  c.TextOut(x,y+20,s);
+  writeln(s);
 end;
 //++++++++++++++End Print CubieCube (debugging only)++++++++++++++++++++++++++++
 
 
-function CubieCube.CentOriRFLBMod2Coord: Word;//Wichtig für den two phase alg, weil Phase 2 diese Koordinate nicht mehr verändert
+function CubieCube.CentOriRFLBMod2Coord: Word;//Wichtig fï¿½r den two phase alg, weil Phase 2 diese Koordinate nicht mehr verï¿½ndert
 begin
   Result:=8*(PCent^[B].o mod 2)+ 4*(PCent^[L].o mod 2)
           + 2*(PCent^[F].o mod 2) + PCent^[R].o mod 2;
@@ -483,7 +478,7 @@ end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //+++++++++++++++Get phase 1 UDSlice raw-coordinate+++++++++++++++++++++++++++++
-function CubieCube.UDSliceCoord;
+function CubieCube.UDSliceCoord: Word;
 var s: Word; k,n: Integer; occupied: array[0..11] of boolean; ed: Edge;
 begin
   for n:= 0 to 11 do occupied[n]:=false;
@@ -1112,7 +1107,7 @@ begin
 end;
 
 
-//spezielle tetracoordinate für cube20
+//spezielle tetracoordinate fï¿½r cube20
 
 function CubieCube.cube20TetraCoord : Word;
 var s: Word; k,n: Integer; occupied: array[0..7] of boolean; co: Corner;
@@ -1166,7 +1161,7 @@ end;
 
 
 //+++++++++++++++Get tetra-coordinate +++++++++++++++++++++++++++++
-function CubieCube.TetraCoord;
+function CubieCube.TetraCoord: Word;
 var s: Word; k,n: Integer; occupied: array[0..7] of boolean; co: Corner;
 
 begin
@@ -1209,8 +1204,8 @@ begin
 end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-//+++wird benötigt, um aus dem Bitvector die Cubes auszulesen, nicht zeitkritisch+++
-//erst nach dem Setzen der anderen Koordinaten aufrufen, da die Parität richtig werden muss!
+//+++wird benï¿½tigt, um aus dem Bitvector die Cubes auszulesen, nicht zeitkritisch+++
+//erst nach dem Setzen der anderen Koordinaten aufrufen, da die Paritï¿½t richtig werden muss!
 
 procedure CubieCube.InvCorn8PermCoord(w: Word);
 var i: Integer;
@@ -1239,10 +1234,10 @@ const FREE = -1;
 begin
   if FileExists(filename) then
   begin
-    Application.ProcessMessages;
+    // Application.ProcessMessages;
     fs := TFileStream.Create(filename, fmOpenRead);
     fs.ReadBuffer(FlipUDSliceToRawFlipUDSlice,64430*4);
-    Form1.ProgressBar.Position:=10;
+    // Form1.ProgressBar.Position:=10;
   end
   else
   begin
@@ -1251,11 +1246,11 @@ begin
     d:= CubieCube.Create;
     classIdx:=0;
     for i:=0 to 126720-1 do occupied[i]:= 0;
-    Form1.SetUpProgressBar(0,495-1,'Creating '+filename+' (252 KB)');
+    // Form1.SetUpProgressBar(0,495-1,'Creating '+filename+' (252 KB)');
     for i:=0 to 495-1 do
     begin
-      Form1.ProgressBar.Position:=i;
-      Application.ProcessMessages;
+      // Form1.ProgressBar.Position:=i;
+      // Application.ProcessMessages;
       c.InvUDSliceCoord(i);
       for j:= 0 to 256-1 do//256=2048/8
       begin
@@ -1282,7 +1277,7 @@ begin
     fs.WriteBuffer(FlipUDSliceToRawFlipUDSlice,64430*4);//Integer has 4 Bytes
     c.Free;
     d.Free;
-    Form1.SetUpProgressBar(0,100,'Loading...');
+    // Form1.SetUpProgressBar(0,100,'Loading...');
   end;
   fs.Free;
 end;
@@ -1335,7 +1330,7 @@ begin
   for i:=0 to 40320-1 do CornPosToSymCornPos[i]:= FREE;
   for i:=0 to 40320-1 do
   begin
-    if i and $ff=0 then Application.ProcessMessages;
+    // if i and $ff=0 then Application.ProcessMessages;
     c.InvCornPermCoord(i);
     if CornPosToSymCornPos[i]=FREE then
     begin
@@ -1346,14 +1341,14 @@ begin
         n:= d.CornPermCoord;
         if CornPosToSymCornPos[n]=FREE then
            CornPosToSymCornPos[n]:= classIdx shl 4 + k;//pack classIdx and symmetry
-        if k=0 then SymCornPosToCornPos[classIdx]:=n; //dieser Teil wird für die Pruning Table benötigt
+        if k=0 then SymCornPosToCornPos[classIdx]:=n; //dieser Teil wird fï¿½r die Pruning Table benï¿½tigt
       end;
       Inc(classIdx);
     end;
   end;
   c.Free;
   d.Free;
-  Form1.ProgressBar.Position:=20;
+  // Form1.ProgressBar.Position:=20;
 end;
 //++++++++++++++++++++End CreateSymCornPosToCornPosTable++++++++++++++++++++++++
 

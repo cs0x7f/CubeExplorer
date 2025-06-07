@@ -1,6 +1,8 @@
+{$H+}
+
 unit CordCube;
 interface
-uses CubiCube, CubeDefs, graphics;
+uses CubiCube, CubeDefs;
 
 //+++++++++++++++++Extract pruning value from Pruning Tables++++++++++++++++++++
 function GetPruningP(index:Integer):Integer;
@@ -35,7 +37,7 @@ procedure CreateFullPhase2PruningTable;
 
 procedure CreateFlipConjugateTable;
 
-procedure CreateGetCorn8PermTable;//für den Coset-Explorer
+procedure CreateGetCorn8PermTable;//fï¿½r den Coset-Explorer
 
 procedure CreateFlipUDSliceCentPruningTable;
 procedure CreateCenTwistUDSliceSortedPruningTable;
@@ -82,7 +84,7 @@ type
     //++++++++++++++Routines used only for debugging++++++++++++++++++++++++++++
     procedure DoMove(m: Move);
     procedure DoMovePhase2(m: Move);
-    procedure Print(c:TCanvas;x,y:Longint);
+    procedure Print();
 
     //+++++Find the Phase 1 and Big Optimals Solver initial pruning value+++++++
     function GetPrun(direction:Integer):Integer;
@@ -115,7 +117,7 @@ var TwistMove: array[0..2187-1,Ux1..Fsx3] of Word;//auf slice moves erweitert
     FlipConjugate: array of array of array {[0..2048-1,0..15,0..788-1]}of Word;
     Edge8PosConjugate: array[0..40320-1,0..15] of Word;
     CornPermConjugate: array[0..40320-1,0..15] of Word;
-    UDSliceSortedConjugate: array[0..24-1,0..15] of Word;//eingeschränkt auf phase2!
+    UDSliceSortedConjugate: array[0..24-1,0..15] of Word;//eingeschrï¿½nkt auf phase2!
     CentOriRFLBMod2Conjugate: array[0..16-1,0..15] of Word;
 //    UDSliceConjugate: array[0..495-1,0..15] of Word;
 
@@ -153,12 +155,12 @@ var TwistMove: array[0..2187-1,Ux1..Fsx3] of Word;//auf slice moves erweitert
 //+++++++GetPacked[i,j] extracts value for entry j from byte value i++++++++++++
     GetPacked: array [0..243-1,0..4] of Byte;
 
-//++++++++++++++++++++++++++Für den Coset-Explorer++++++++++++++++++++++++++++++
-   BitVector: array {[0..24*40320*288/32-1]} of Integer;//für den Bitvektor 24*40320*288
-   BitVectorPS: array {[0..24*40320*288/32-1]} of Integer;//für den Bitvektor 24*40320*288
+//++++++++++++++++++++++++++Fï¿½r den Coset-Explorer++++++++++++++++++++++++++++++
+   BitVector: array {[0..24*40320*288/32-1]} of Integer;//fï¿½r den Bitvektor 24*40320*288
+   BitVectorPS: array {[0..24*40320*288/32-1]} of Integer;//fï¿½r den Bitvektor 24*40320*288
    GetCorn8Perm: array[0..40320-1] of Word;//Eckenpermutationen in den Tetraedern
 
-//++++++++++++++++++++++++++Für phase 2 bei orientierten Cubes++++++++++++++++++
+//++++++++++++++++++++++++++Fï¿½r phase 2 bei orientierten Cubes++++++++++++++++++
    UDSliceParity: array [0..24-1] of Byte;
    RFLBCentOriParity: array [0..4096-1] of Byte;
 
@@ -172,7 +174,7 @@ var TwistMove: array[0..2187-1,Ux1..Fsx3] of Word;//auf slice moves erweitert
 
 implementation
 
-uses Symmetries, classes, SysUtils, RubikMain, Forms,Windows,OptOptions, FaceCube; /////////FaceCube wieder rausnehmen!!!!!!!!
+uses Symmetries, classes, SysUtils, FaceCube; /////////FaceCube wieder rausnehmen!!!!!!!!
 
 //+++++++++++++++++++++++++++Default Constructor++++++++++++++++++++++++++++++++
 constructor CoordCube.Create;
@@ -389,7 +391,7 @@ begin
   c:= CubieCube.Create;
   for i:=0 to 4096-1 do
   begin
-    if i and $fff =0 then Application.ProcessMessages;
+    // if i and $fff =0 then Application.ProcessMessages;
     c.InvCentOriCoord(i);
     for j:= U to Fs do
     begin
@@ -435,7 +437,7 @@ begin
   c:= CubieCube.Create;
   for i:=0 to 2187-1 do
   begin
-    if i and $fff =0 then Application.ProcessMessages;
+    // if i and $fff =0 then Application.ProcessMessages;
     c.InvCornOriCoord(i);
     for j:= U to Fs do
     begin
@@ -447,7 +449,7 @@ begin
     end;
   end;
   c.Free;
-  Form1.ProgressBar.Position:=30;
+  // Form1.ProgressBar.Position:=30;
 end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -502,7 +504,7 @@ begin
   c:= CubieCube.Create;
   for i:=0 to 40320-1 do
   begin
-    if i and $fff = 0 then Application.ProcessMessages;
+    // if i and $fff = 0 then Application.ProcessMessages;
     c.InvCornPermCoord(i);
     for j:= U to Fs do
     begin
@@ -514,7 +516,7 @@ begin
     end;
   end;
   c.Free;
-  Form1.ProgressBar.Position:=60;
+  // Form1.ProgressBar.Position:=60;
 end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -529,22 +531,23 @@ begin
   SetLength(FlipSliceMove,64430,27);//27 is number of different moves
   if FileExists(filename) then
   begin
+    logging('Reading FlipUDSlice MoveTable from file: ' + filename);
     fstr := TFileStream.Create(filename, fmOpenRead);
     for k:= 0 to 64430-1 do
     begin
       fstr.ReadBuffer(FlipSliceMove[k][0],27*4);
-      if k and $fff =0 then Application.ProcessMessages;
+      // if k and $fff =0 then Application.ProcessMessages;
     end;
-    Form1.ProgressBar.Position:=40;
+    // Form1.ProgressBar.Position:=40;
   end
   else
   begin
     c:= CubieCube.Create;
-    Form1.SetUpProgressBar(0,64430-1,'Creating '+filename+' (6.6 MB)');
+    // Form1.SetUpProgressBar(0,64430-1,'Creating '+filename+' (6.6 MB)');
     for i:=0 to 64430-1 do
     begin
-      Form1.ProgressBar.Position:=i;
-      if i and $fff =0 then Application.ProcessMessages;
+      // Form1.ProgressBar.Position:=i;
+      if i and $fff =0 then write('Create FlipUDSlice MoveTable... ', i * 100  div 64430:3,'%',#13);
       n:= FlipUDSliceToRawFlipUDSlice[i];
       c.InvUDSliceCoord(n div 2048);
       c.InvEdgeOriCoord(n mod 2048);
@@ -561,7 +564,8 @@ begin
     for k:= 0 to 64430-1 do
       fstr.WriteBuffer(FlipSliceMove[k][0],27*4);
     c.Free;
-    Form1.SetUpProgressBar(0,100,'Loading...');
+    // Form1.SetUpProgressBar(0,100,'Loading...');
+    logging('Create FlipUDSlice MoveTable to file: ' + filename);
   end;
   fstr.Free;
 end;
@@ -574,7 +578,7 @@ begin
   c:= CubieCube.Create;
   for i:=0 to 11879 do
   begin
-    if i and $fff = 0 then Application.ProcessMessages;
+    // if i and $fff = 0 then Application.ProcessMessages;
     c.InvUDSliceSortedCoord(i);
     for j:= U to Fs do
     begin
@@ -586,7 +590,7 @@ begin
     end;
   end;
   c.Free;
-  Form1.ProgressBar.Position:=50;
+  // Form1.ProgressBar.Position:=50;
 end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -619,7 +623,7 @@ begin
   c:= CubieCube.Create;
   for i:=0 to 40320-1 do
   begin
-   if i and $fff = 0 then Application.ProcessMessages;
+   // if i and $fff = 0 then Application.ProcessMessages;
    c.InvPhase2EdgePermCoord(i);
     for j:= U to Fs do
     begin
@@ -636,7 +640,7 @@ begin
     end;
   end;
   c.Free;
-  Form1.ProgressBar.Position:=70;
+  // Form1.ProgressBar.Position:=70;
 end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -651,7 +655,7 @@ begin
   GetEdge8Perm[i,j]:=55555;//magic number used for empty entry
   for i:=0 to 40320-1 do
   begin
-    if i and $fff =0 then Application.ProcessMessages;
+    // if i and $fff =0 then Application.ProcessMessages;
     c.InvPhase2EdgePermCoord(i);
 
     EdgeMult(EdgeSym[16],c.PEdge^,prodE); //Apply S_URF3*X*S_URF3^-1 to edges
@@ -681,9 +685,9 @@ begin
   c:= CubieCube.Create;
   for k:=0 to 40320-1 do
   begin
-    if k and $fff =0 then Application.ProcessMessages;
+    // if k and $fff =0 then Application.ProcessMessages;
     c.InvCornPermCoord(k);
-    //testen ob die ersten vier Koordinaten überhaupt im Tetraeder liegen
+    //testen ob die ersten vier Koordinaten ï¿½berhaupt im Tetraeder liegen
     for cc:= URF to DRB do test[cc]:=0;
     for i1:= URF1 to UBR1 do Inc(test[c.PCorn^[Tetra1ToCorner[i1]].c]);
     if test[URF]*test[UFL]*test[ULB]*test[UBR]<>1 then x1:=-1
@@ -701,7 +705,7 @@ begin
       end;
     end;
 
-//ich habe ein besseres Gefühl, das auf die Position von zwei Steinen zu beziehen.
+//ich habe ein besseres Gefï¿½hl, das auf die Position von zwei Steinen zu beziehen.
     if      (c.PCorn^[DFR].c=DFR) and (c.PCorn^[DLF].c=DLF) then x2:=0
     else if (c.PCorn^[DFR].c=DFR) and (c.PCorn^[DBL].c=DLF) then x2:=1
     else if (c.PCorn^[DFR].c=DFR) and (c.PCorn^[DRB].c=DLF) then x2:=2
@@ -738,8 +742,8 @@ begin
   CreateUDSliceSortedMoveTable;
   CreateCornPermMoveTable;
 
-  CreateGetCorn8PermTable;//für Coset-Explorer
-//  CreateCorn8PermMoveTable;  //für den Coset Explorer (Prescan)
+  CreateGetCorn8PermTable;//fï¿½r Coset-Explorer
+//  CreateCorn8PermMoveTable;  //fï¿½r den Coset Explorer (Prescan)
 
   CreateEdge8PermMoveTable;
   CreateUDSliceSortedSymMoveTable;
@@ -848,119 +852,182 @@ end;
 
 //++++++++++++++++Get entry in unpacked phase 1 pruning table+++++++++++++++++++
 function GetPruning(index: Integer):Integer;
-//var mask,base,offset: Integer; //Delphi version of asseembler code
-{*begin
+var mask,base,offset: Integer; //Delphi version of asseembler code
+begin
   mask:=3;//00000000 00000000 00000000 00000011
   base:= index shr 4;
   offset:= index and $f;
   mask:= mask shl (offset*2);
   mask:= mask and Pruning[base];
   Result:= mask shr (offset*2)
-end;*}
-asm
-  mov ecx,eax
-  shr eax,$4 {base}
-  and ecx,$f
-  add ecx,ecx {offset*2}
-  mov edx,[Pruning]
-  mov eax,[edx+eax*4] {Pruning[base]}
-  mov edx,$3;
-  shl edx,cl {mask shl offset*2}
-  and eax,edx
-  shr eax,cl
 end;
+// assembler;
+// {$asmMode intel}
+// asm
+//   mov rax,index
+//   mov rcx,rax
+//   shr rax,$4 {base}
+//   and rcx,$f
+//   add rcx,rcx {offset*2}
+//   mov rdx,[Pruning]
+//   mov rax,[rdx+rax*4] {Pruning[base]}
+//   mov rdx,$3;
+//   shl rdx,cl {mask shl offset*2}
+//   and rax,rdx
+//   shr rax,cl
+// end;
+// {$asmMode intel}
+// asm
+//   mov eax,index
+//   mov ecx,eax
+//   shr eax,$4 {base}
+//   and ecx,$f
+//   add ecx,ecx {offset*2}
+//   mov edx,[Pruning]
+//   mov eax,[edx+eax*4] {Pruning[base]}
+//   mov edx,$3;
+//   shl edx,cl {mask shl offset*2}
+//   and eax,edx
+//   shr eax,cl
+// end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //++++++++++++++++Get entry in packed phase 1 pruning table+++++++++++++++++++
 function GetPruningP(index: Integer):Integer;
-
-asm
-  cmp eax,(64430/5)*2187*4
-  jae @x5
-  mov edx,eax
-  and edx,3 //offset
-  shr eax,2 //base
-  mov ecx,[PruningP]
-  movzx eax, BYTE PTR[ecx+eax]  {eax:=Pruning[base]}
-  lea eax,[eax+eax*4] {multiply by 5 to find offset in GetPacked}
-  add eax,OFFSET GetPacked {eax:=GetPacked[Pruning[base]]}
-  movzx eax,BYTE PTR[eax+edx] {eax:=GetPacked[Pruning[base],offset]}
-  ret
-@x5:
-  sub eax,(64430/5)*2187*4 //base, offset is 4
-  mov ecx,[PruningP]
-  movzx eax, BYTE PTR[ecx+eax]
-  lea eax,[eax+eax*4]
-  add eax,OFFSET GetPacked
-  movzx eax,BYTE PTR[eax+4]
+var base,offset: Integer; //Delphi version of asseembler code
+begin
+  if index < (64430 div 5)*2187*4 then begin
+    base:= index shr 2;
+    offset:= index and $3;
+    Result:= GetPacked[PruningP[base],offset]
+  end else begin
+    base:= index - (64430 div 5)*2187*4;
+    Result:= GetPacked[PruningP[base],4]
+  end
 end;
+// assembler;
+// {$asmMode intel}
+// asm
+//   cmp eax,(64430/5)*2187*4
+//   jae @x5
+//   mov edx,eax
+//   and edx,3 //offset
+//   shr eax,2 //base
+//   mov ecx,[PruningP]
+//   movzx eax, BYTE PTR[ecx+eax]  {eax:=Pruning[base]}
+//   lea eax,[eax+eax*4] {multiply by 5 to find offset in GetPacked}
+//   add eax,OFFSET GetPacked {eax:=GetPacked[Pruning[base]]}
+//   movzx eax,BYTE PTR[eax+edx] {eax:=GetPacked[Pruning[base],offset]}
+//   ret
+// @x5:
+//   sub eax,(64430/5)*2187*4 //base, offset is 4
+//   mov ecx,[PruningP]
+//   movzx eax, BYTE PTR[ecx+eax]
+//   lea eax,[eax+eax*4]
+//   add eax,OFFSET GetPacked
+//   movzx eax,BYTE PTR[eax+4]
+// end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //++++++++++++++++Get entry in unpacked phase 2 pruning table+++++++++++++++++++
 {$IF not QTM}
 function GetPruningPhase2(index: Integer):Integer;
-
-asm
-  mov ecx,eax
-  shr eax,$4 {base}
-  and ecx,$f
-  add ecx,ecx {offset*2}
-  mov edx,[PruningPhase2]
-  mov eax,[edx+eax*4] {Pruning[base]}
-  mov edx,$3;
-  shl edx,cl {mask shl offset*2}
-  and eax,edx
-  shr eax,cl
+var mask,base,offset: Integer; //Delphi version of asseembler code
+begin
+  mask:=3;//00000000 00000000 00000000 00000011
+  base:= index shr 4;
+  offset:= index and $f;
+  mask:= mask shl (offset*2);
+  mask:= mask and PruningPhase2[base];
+  Result:= mask shr (offset*2)
 end;
+// assembler;
+// {$asmMode intel}
+// asm
+//   mov ecx,eax
+//   shr eax,$4 {base}
+//   and ecx,$f
+//   add ecx,ecx {offset*2}
+//   mov edx,[PruningPhase2]
+//   mov eax,[edx+eax*4] {Pruning[base]}
+//   mov edx,$3;
+//   shl edx,cl {mask shl offset*2}
+//   and eax,edx
+//   shr eax,cl
+// end;
 {$IFEND}
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //++++++++++++++++Get entry in packed phase 2 pruning table+++++++++++++++++++++
 {$IF not QTM}
 function GetPruningPhase2P(index: Integer):Integer;
-
-asm
-  cmp eax,(40320/5)*2768*4
-  jae @x5
-  mov edx,eax
-  and edx,3 //offset
-  shr eax,2 //base
-  mov ecx,[PruningPhase2P]
-  movzx eax, BYTE PTR[ecx+eax]  {eax:=Pruning[base]}
-  lea eax,[eax+eax*4] {multiply by 5 to find offset in GetPacked}
-  add eax,OFFSET GetPacked {eax:=GetPacked[Pruning[base]]}
-  movzx eax,BYTE PTR[eax+edx] {eax:=GetPacked[Pruning[base],offset]}
-  ret
-@x5:
-  sub eax,(40320/5)*2768*4 //base, offset is 4
-  mov ecx,[PruningPhase2P]
-  movzx eax, BYTE PTR[ecx+eax]
-  lea eax,[eax+eax*4]
-  add eax,OFFSET GetPacked
-  movzx eax,BYTE PTR[eax+4]
+var base,offset: Integer; //Delphi version of asseembler code
+begin
+  if index < (40320 div 5)*2768*4 then begin
+    base:= index shr 2;
+    offset:= index and $3;
+    Result:= GetPacked[PruningPhase2P[base],offset]
+  end else begin
+    base:= index - (40320 div 5)*2768*4;
+    Result:= GetPacked[PruningPhase2P[base],4]
+  end
 end;
+// assembler;
+// {$asmMode intel}
+// asm
+//   cmp eax,(40320/5)*2768*4
+//   jae @x5
+//   mov edx,eax
+//   and edx,3 //offset
+//   shr eax,2 //base
+//   mov ecx,[PruningPhase2P]
+//   movzx eax, BYTE PTR[ecx+eax]  {eax:=Pruning[base]}
+//   lea eax,[eax+eax*4] {multiply by 5 to find offset in GetPacked}
+//   add eax,OFFSET GetPacked {eax:=GetPacked[Pruning[base]]}
+//   movzx eax,BYTE PTR[eax+edx] {eax:=GetPacked[Pruning[base],offset]}
+//   ret
+// @x5:
+//   sub eax,(40320/5)*2768*4 //base, offset is 4
+//   mov ecx,[PruningPhase2P]
+//   movzx eax, BYTE PTR[ecx+eax]
+//   lea eax,[eax+eax*4]
+//   add eax,OFFSET GetPacked
+//   movzx eax,BYTE PTR[eax+4]
+// end;
 {$IFEND}
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //++++++++++++++++Get entry in unpacked fullCorner table+++++++++++++++++++
 function GetPruningFullCorner(index: Integer):Integer;
-
-asm
-  mov ecx,eax
-  shr eax,$4 {base}
-  and ecx,$f
-  add ecx,ecx {offset*2}
-  mov edx,[PruningFullCorner]
-  mov eax,[edx+eax*4] {Pruning[base]}
-  mov edx,$3;
-  shl edx,cl {mask shl offset*2}
-  and eax,edx
-  shr eax,cl
+var mask,base,offset: Integer; //Delphi version of asseembler code
+begin
+  mask:=3;//00000000 00000000 00000000 00000011
+  base:= index shr 4;
+  offset:= index and $f;
+  mask:= mask shl (offset*2);
+  mask:= mask and PruningFullCorner[base];
+  Result:= mask shr (offset*2)
 end;
+// assembler;
+// {$asmMode intel}
+// asm
+//   mov ecx,eax
+//   shr eax,$4 {base}
+//   and ecx,$f
+//   add ecx,ecx {offset*2}
+//   mov edx,[PruningFullCorner]
+//   mov eax,[edx+eax*4] {Pruning[base]}
+//   mov edx,$3;
+//   shl edx,cl {mask shl offset*2}
+//   and eax,edx
+//   shr eax,cl
+// end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //++++++++++++++++Get entry in unpacked cent pruning table+++++++++++++++++++++++
 function GetPruningCent(index: LongWord):Integer;
+assembler;
+{$asmMode intel}
 asm
   mov ecx,eax
   shr eax,$4 {base}
@@ -977,6 +1044,8 @@ end;
 
 //++++++++++++++++Get entry in unpacked big pruning table+++++++++++++++++++++++
 function GetPruningBig(index: LongWord):Integer;
+assembler;
+{$asmMode intel}
 asm
   mov ecx,eax
   shr eax,$4 {base}
@@ -993,6 +1062,7 @@ end;
 
 //++++++++++++++++Get entry in unpacked big pruning table+++++++++++++++++++++++
 function GetPruningUBig(index: LongWord; p: Pointer):Integer;
+assembler;
 asm
   mov ecx,eax
   shr eax,$4 {base}
@@ -1010,7 +1080,7 @@ end;
 
 //++++++++++++++++Get entry in packed cent pruning table+++++++++++++++++++++++++
 function GetPruningCentP(index: LongWord):Integer;
-
+assembler;
 asm
   cmp eax,450906912*4
   jae @x5
@@ -1039,7 +1109,7 @@ end;
 
 //++++++++++++++++Get entry in packed big pruning table+++++++++++++++++++++++++
 function GetPruningBigP(index: LongWord):Integer;
-
+assembler;
 asm
   cmp eax,705886618*4
   jae @x5
@@ -1064,7 +1134,8 @@ end;
 
 //++++++++++++++++Get entry in packed ultrabig pruning table+++++++++++++++++++++++++
 function GetPruningUBigP(index: LongWord; p: Pointer):Integer; //p ist Pointer auf die TetraTabelle
-//edx enthält p, eax enthält index
+//edx enthï¿½lt p, eax enthï¿½lt index
+assembler;
 asm
   mov ecx,[edx] //pointer auf Tabellenstart sichern
   cmp eax,(64430/5)*2187*4
@@ -1185,18 +1256,18 @@ begin
   PruningCenTwistUDSliceSorted[0]:=depth;
   done:=1;
 
-  Form1.ProgressBar.Visible:= true;
-  Form1.ProgressLabel.Visible:=true;
-  Form1.SetUpProgressBar(0,10,'Please wait...');
+  // Form1.ProgressBar.Visible:= true;
+  // Form1.ProgressLabel.Visible:=true;
+  // Form1.SetUpProgressBar(0,10,'Please wait...');
 
 
   while done <>11880*4096 do
   begin
-    Form1.ProgressBar.Position:=depth;
-    Application.ProcessMessages;
+    // Form1.ProgressBar.Position:=depth;
+    // Application.ProcessMessages;
     for i:=0 to 11880*4096-1 do
     begin
-      if i and $fff =0 then Application.ProcessMessages;
+      // if i and $fff =0 then Application.ProcessMessages;
       if PruningCenTwistUDSliceSorted[i]=depth then
       for m:= Ux1 to Fsx3 do
       begin
@@ -1220,8 +1291,8 @@ begin
     end;
     Inc(depth);
   end;
-  Form1.ProgressBar.Visible:= false;
-  Form1.ProgressLabel.Visible:=false;
+  // Form1.ProgressBar.Visible:= false;
+  // Form1.ProgressLabel.Visible:=false;
 end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -1250,9 +1321,9 @@ begin
   {$ELSE}
   if sliceMode then fileName:= 'phase1CntPQs.prun' else fileName:= 'phase1CntPQ.prun';
   {$IFEND}
-  Form1.SetUpProgressBar(0,16,'Initializing memory. Please wait...');
-  Form1.ProgressLabel.Visible:=true;
-  Form1.Progressbar.Visible:=true;
+  // Form1.SetUpProgressBar(0,16,'Initializing memory. Please wait...');
+  // Form1.ProgressLabel.Visible:=true;
+  // Form1.Progressbar.Visible:=true;
   fs:=nil;
 
   SetCurrentDir(ExtractFilePath(Paramstr(0)));//Cube Explorer directory
@@ -1261,56 +1332,56 @@ begin
     try
        SetLength(PruningCentP,450906912);//64430*2187*16/5, 8/5 bits per state
     except
-      Application.MessageBox(PChar(Err[35]),'',MB_ICONWARNING);
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
-      Form1.FixCenterFacelets.Checked:=false;
+      // Application.MessageBox(PChar(Err[35]),'',MB_ICONWARNING);
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
+      // Form1.FixCenterFacelets.Checked:=false;
       Exit;
     end;
     try
 
       fs := TFileStream.Create(filename, fmOpenRead);
-      Form1.SetUpProgressBar(0,2187,'Loading '+filename+' (430 MB)');
-      Application.ProcessMessages;
+      // Form1.SetUpProgressBar(0,2187,'Loading '+filename+' (430 MB)');
+      // Application.ProcessMessages;
       for i:= 0 to 2187-1 do
       begin
         fs.ReadBuffer(PruningCentP[i*206176],206176);
-        Form1.ProgressBar.Position:=i;
-        Application.ProcessMessages;
+        // Form1.ProgressBar.Position:=i;
+        // Application.ProcessMessages;
       end;
 
       fs.Free;
-      Form1.ProgressBar.Visible:= false;
-      Form1.ProgressLabel.Visible:=false;
+      // Form1.ProgressBar.Visible:= false;
+      // Form1.ProgressLabel.Visible:=false;
     except
       fs.Free;
-      Application.MessageBox(PChar(Err[36]),'',MB_ICONWARNING);
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
+      // Application.MessageBox(PChar(Err[36]),'',MB_ICONWARNING);
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
       SetLength(PruningCentP,0);
-      Form1.FixCenterFacelets.Checked:=false;
+      // Form1.FixCenterFacelets.Checked:=false;
       Exit;
     end;
   end
   else
   begin
-    Application.ProcessMessages;
+    // Application.ProcessMessages;
     try
       SetLength(PruningCent,64430*2187);//two bits per state: Integer has 32 bits
     except
-      Application.MessageBox(PChar(Err[35]),'',MB_ICONWARNING);
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
-      Form1.FixCenterFacelets.Checked:=false;
+      // Application.MessageBox(PChar(Err[35]),'',MB_ICONWARNING);
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
+      // Form1.FixCenterFacelets.Checked:=false;
       Exit;
     end;
-    Form1.ProgressLabel.Caption:='';
-    if Application.MessageBox(PChar(Err[37]),'',MB_ICONWARNING or MB_YESNO)<>IDYES then
+    // Form1.ProgressLabel.Caption:='';
+    // if Application.MessageBox(PChar(Err[37]),'',MB_ICONWARNING or MB_YESNO)<>IDYES then
     begin
       PruningCent:=nil;//release memory
-      Form1.FixCenterFacelets.Checked:=false;
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
+      // Form1.FixCenterFacelets.Checked:=false;
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
       Exit;
     end;
     flipBackward:=false;//flip to backward search if true
@@ -1319,12 +1390,12 @@ begin
 
     SetLength(SymState,64430);//16 bits in each word, set bit j (0<=j<=15)
                               //if the coordinate has symmety S(j)
-    Form1.SetUpProgressBar(0,64430-1,'Analyzing...');
+    // Form1.SetUpProgressBar(0,64430-1,'Analyzing...');
 //Symmetrien des SymCoordinate berechnen
     for i:= 0 to 64430-1 do
     begin
-      Form1.ProgressBar.Position:=i;
-      if i and $ff =0 then Application.ProcessMessages;
+      // Form1.ProgressBar.Position:=i;
+      // if i and $ff =0 then Application.ProcessMessages;
       z:= FlipUDSliceToRawFlipUDSlice[i];
       c.InvUDSliceCoord(z div 2048);
       c.InvEdgeOriCoord(z mod 2048);//c now is a representant
@@ -1341,12 +1412,12 @@ begin
       end;
     end;
 
-    Form1.ProgressBar.Position:=0;
-    Form1.SetUpProgressBar(0,14,'Creating '+filename+' (430 MB)');  //????????????????????????
+    // Form1.ProgressBar.Position:=0;
+    // Form1.SetUpProgressBar(0,14,'Creating '+filename+' (430 MB)');  //????????????????????????
     for i:=0 to 64430*2187-1 do
     begin
       PruningCent[i]:=-1;
-      if (i and $8ffff)=0 then Application.ProcessMessages;
+      // if (i and $8ffff)=0 then Application.ProcessMessages;
     end;
     SetPruningCent(0,0);
     done:=1;
@@ -1356,13 +1427,13 @@ begin
     begin
       if realdepth=10 then flipBackward:=true;
       Inc(realDepth);
-      Form1.ProgressBar.Position:=realDepth;
+      // Form1.ProgressBar.Position:=realDepth;
       Inc(depth);
       depth:= depth mod 3;
      // for i:=0 to 788*2048-1 do
       for i:=0 to 64430*16-1 do
       begin
-        if i and $ff =0 then Application.ProcessMessages;
+        // if i and $ff =0 then Application.ProcessMessages;
         idx:=Int64(i)*2187;// ((0..64430-1)*16+(0..16-1))*2187+twist
         match:=true;//any value
         for k:=0 to 2187-1 do
@@ -1440,12 +1511,12 @@ begin
         end;
       end;
     end;
-    Form1.ProgressBar.Position:=12;   //????????????????????????????????????????????????????
+    // Form1.ProgressBar.Position:=12;   //????????????????????????????????????????????????????
 
     fs := TFileStream.Create(filename, fmCreate);
-    Form1.SetUpProgressBar(0,450906912 div 2187,'Writing '+filename);
+    // Form1.SetUpProgressBar(0,450906912 div 2187,'Writing '+filename);
     done:=0;
-    Form1.ProgressBar.Position:=done;
+    // Form1.ProgressBar.Position:=done;
     try
       for i:= 0 to 450906912 - 1  do //64430*16*2187/5
       begin
@@ -1463,18 +1534,18 @@ begin
         begin
           fs.WriteBuffer(buf[0],2187);
           Inc(done);
-          Form1.ProgressBar.Position:=done;
-          Application.ProcessMessages;
+          // Form1.ProgressBar.Position:=done;
+          // Application.ProcessMessages;
         end;
       end;
     except
-      Application.MessageBox(PChar(Err[38]),'',MB_ICONWARNING);
+      // Application.MessageBox(PChar(Err[38]),'',MB_ICONWARNING);
       fs.Free;
       fs:=nil;
       if FileExists(PChar(filename)) then DeleteFile(PChar(filename));//delete incomplete file
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
-      Form1.FixCenterFacelets.Checked:=false;
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
+      // Form1.FixCenterFacelets.Checked:=false;
       Finalize(PruningCent);
       Exit;
     end;
@@ -1485,25 +1556,25 @@ begin
     SetLength(PruningCentP,450906912);
     try
       fs := TFileStream.Create(filename, fmOpenRead);
-      Form1.SetUpProgressBar(0,2187,'Loading '+filename+' (430 MB)');
-      Application.ProcessMessages;
+      // Form1.SetUpProgressBar(0,2187,'Loading '+filename+' (430 MB)');
+      // Application.ProcessMessages;
       for i:= 0 to 2187-1 do
       begin
         fs.ReadBuffer(PruningCentP[i*206176],206176);
-        Form1.ProgressBar.Position:=i;
-        Application.ProcessMessages;
+        // Form1.ProgressBar.Position:=i;
+        // Application.ProcessMessages;
       end;
       fs.Free;
     except
       fs.Free;
-      Application.MessageBox(PChar(Err[36]),'',MB_ICONWARNING);
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
-      Form1.FixCenterFacelets.Checked:=false;
+      // Application.MessageBox(PChar(Err[36]),'',MB_ICONWARNING);
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
+      // Form1.FixCenterFacelets.Checked:=false;
       Exit;
     end;
-    Form1.ProgressBar.Visible:= false;
-    Form1.ProgressLabel.Visible:=false;
+    // Form1.ProgressBar.Visible:= false;
+    // Form1.ProgressLabel.Visible:=false;
   end;
 end;
 //++++++++++++++++++End Create cent pruning table++++++++++++++++++++++++++++++++
@@ -1536,12 +1607,13 @@ begin
   else fn:=filename1;
   if FileExists(fn) then
   begin
+    logging('Reading FlipUDSlice PruningTable from file: ' + fn);
     SetLength(PruningP,64430*2187 div 5);//file loadable from disk?
-    Application.ProcessMessages;
+    // Application.ProcessMessages;
     fs := TFileStream.Create(fn, fmOpenRead);
     fs.ReadBuffer(PruningP[0],64430*2187 div 5);
     fs.Free;
-    Form1.ProgressBar.Position:=80;
+    // Form1.ProgressBar.Position:=80;
   end
   else
   begin
@@ -1551,12 +1623,12 @@ begin
     d:=CubieCube.Create;
     SetLength(SymState,64430);//16 bits in each word, set bit j (0<=j<=15)
                               //if the coordinate has symmety S(j)
-    Form1.SetUpProgressBar(0,64430-1,'Analyzing...');
+    // Form1.SetUpProgressBar(0,64430-1,'Analyzing...');
 //Symmetrien des SymCoordinate berechnen
     for i:= 0 to 64430-1 do
     begin
-      Form1.ProgressBar.Position:=i;
-      if i and $ff =0 then Application.ProcessMessages;
+      // Form1.ProgressBar.Position:=i;
+      // if i and $ff =0 then Application.ProcessMessages;
       z:= FlipUDSliceToRawFlipUDSlice[i];
       c.InvUDSliceCoord(z div 2048);
       c.InvEdgeOriCoord(z mod 2048);//c now is a representant
@@ -1581,7 +1653,7 @@ begin
     depth:=-1;
     realDepth:=-1;
 
-    Form1.SetUpProgressBar(0,13,'Creating '+fn+' (26.8 MB)');
+    // Form1.SetUpProgressBar(0,13,'Creating '+fn+' (26.8 MB)');
     while (done<>64430*2187)do
     begin
 {$IF not QTM}
@@ -1589,20 +1661,21 @@ begin
 {$ELSE}
       if realdepth=9 then flipBackward:=true;
 {$IFEND}
-
       Inc(realDepth);
-      Form1.ProgressBar.Position:=realDepth;
+      // Form1.ProgressBar.Position:=realDepth;
       Inc(depth);
       depth:= depth mod 3;
       for i:=0 to 64430*2187-1 do
       begin
-        if i and $3ffff =0 then Application.ProcessMessages;
+        // writeln(4, i);
+        if i and $3ffff =0 then write('Create FlipUDSlice PruningTable... ', done * 100  div (64430*2187):3,'%',#13);
 
         match:=true;//any value
         case flipBackward of
           true: match:= GetPruning(i)=3;//not occupied yet
           false: match:= GetPruning(i)=depth;
         end;
+        // writeln(5);
 
         if match then
         begin
@@ -1668,12 +1741,12 @@ begin
       end;
     end;
 
-    Form1.ProgressBar.Position:=12;
+    // Form1.ProgressBar.Position:=12;
 
     fs := TFileStream.Create(fn, fmCreate);
-    Form1.SetUpProgressBar(0,64430 div 5,'Writing '+fn);
+    // Form1.SetUpProgressBar(0,64430 div 5,'Writing '+fn);
     done:=0;
-    Form1.ProgressBar.Position:=done;
+    // Form1.ProgressBar.Position:=done;
     for i:= 0 to (64430 div 5)*2187 - 1 do
     begin
       n:=1;
@@ -1690,8 +1763,8 @@ begin
       begin
         fs.WriteBuffer(buf[0],2187);
         Inc(done);
-        Form1.ProgressBar.Position:=done;
-        Application.ProcessMessages;
+        // Form1.ProgressBar.Position:=done;
+        // Application.ProcessMessages;
       end;
     end;
     fs.Free;
@@ -1700,13 +1773,13 @@ begin
     d.Free;
 
     SetLength(PruningP,64430*2187 div 5);
-    Application.ProcessMessages;
+    // Application.ProcessMessages;
     fs := TFileStream.Create(fn, fmOpenRead);
     fs.ReadBuffer(PruningP[0],64430*2187 div 5);
-    Form1.ProgressBar.Position:=80;
+    // Form1.ProgressBar.Position:=80;
     fs.Free;
-
-    Form1.SetUpProgressBar(0,100,'Loading...');
+    logging('Create FlipUDSlice PruningTable to file: ' + fn);
+    // Form1.SetUpProgressBar(0,100,'Loading...');
   end;
 end;
 
@@ -1732,11 +1805,11 @@ begin
   if FileExists(fn) then
   begin
     SetLength(PruningP,64430*2187 div 5);//file loadable from disk?
-    Application.ProcessMessages;
+    // Application.ProcessMessages;
     fs := TFileStream.Create(fn, fmOpenRead);
     fs.ReadBuffer(PruningP[0],64430*2187 div 5);
     fs.Free;
-    Form1.ProgressBar.Position:=80;
+    // Form1.ProgressBar.Position:=80;
   end
   else
   begin
@@ -1746,12 +1819,12 @@ begin
     d:=CubieCube.Create;
     SetLength(SymState,64430);//16 bits in each word, set bit j (0<=j<=15)
                               //if the coordinate has symmety S(j)
-    Form1.SetUpProgressBar(0,64430-1,'Analyzing...');
+    // Form1.SetUpProgressBar(0,64430-1,'Analyzing...');
 //Symmetrien des SymCoordinate berechnen
     for i:= 0 to 64430-1 do
     begin
-      Form1.ProgressBar.Position:=i;
-      if i and $ff =0 then Application.ProcessMessages;
+      // Form1.ProgressBar.Position:=i;
+      // if i and $ff =0 then Application.ProcessMessages;
       z:= FlipUDSliceToRawFlipUDSlice[i];
       c.InvUDSliceCoord(z div 2048);
       c.InvEdgeOriCoord(z mod 2048);//c now is a representant
@@ -1775,17 +1848,17 @@ begin
     depth:=-1;
     realDepth:=-1;
 
-    Form1.SetUpProgressBar(0,13,'Creating '+fn+' (26.8 MB)');
+    // Form1.SetUpProgressBar(0,13,'Creating '+fn+' (26.8 MB)');
     while (done<>64430*2187)do
     begin
       if realdepth=9 then flipBackward:=true;
       Inc(realDepth);
-      Form1.ProgressBar.Position:=realDepth;
+      // Form1.ProgressBar.Position:=realDepth;
       Inc(depth);
       depth:= depth mod 3;
       for i:=0 to 64430*2187-1 do
       begin
-        if i and $3ffff =0 then Application.ProcessMessages;
+        // if i and $3ffff =0 then Application.ProcessMessages;
 
         match:=true;//any value
         case flipBackward of
@@ -1855,12 +1928,12 @@ begin
       end;
     end;
 
-    Form1.ProgressBar.Position:=12;
+    // Form1.ProgressBar.Position:=12;
 
     fs := TFileStream.Create(fn, fmCreate);
-    Form1.SetUpProgressBar(0,64430 div 5,'Writing '+fn);
+    // Form1.SetUpProgressBar(0,64430 div 5,'Writing '+fn);
     done:=0;
-    Form1.ProgressBar.Position:=done;
+    // Form1.ProgressBar.Position:=done;
     for i:= 0 to (64430 div 5)*2187 - 1 do
     begin
       n:=1;
@@ -1877,8 +1950,8 @@ begin
       begin
         fs.WriteBuffer(buf[0],2187);
         Inc(done);
-        Form1.ProgressBar.Position:=done;
-        Application.ProcessMessages;
+        // Form1.ProgressBar.Position:=done;
+        // Application.ProcessMessages;
       end;
     end;
     fs.Free;
@@ -1887,13 +1960,13 @@ begin
     d.Free;
 
     SetLength(PruningP,64430*2187 div 5);
-    Application.ProcessMessages;
+    // Application.ProcessMessages;
     fs := TFileStream.Create(fn, fmOpenRead);
     fs.ReadBuffer(PruningP[0],64430*2187 div 5);
-    Form1.ProgressBar.Position:=80;
+    // Form1.ProgressBar.Position:=80;
     fs.Free;
 
-    Form1.SetUpProgressBar(0,100,'Loading...');
+    // Form1.SetUpProgressBar(0,100,'Loading...');
   end;
 end;
 *}
@@ -1920,11 +1993,12 @@ begin
   if sliceMode then fn:=filename2 else fn:=filename1;
   if FileExists(fn) then
   begin
+    logging('Reading Phase2 PruningTable from file: ' + fn);
     SetLength(PruningPhase2P,2768*40320 div 5);
-    Application.ProcessMessages;
+    // Application.ProcessMessages;
     fs := TFileStream.Create(fn, fmOpenRead);
     fs.ReadBuffer(PruningPhase2P[0],2768*40320 div 5);
-    Form1.ProgressBar.Position:=90;
+    // Form1.ProgressBar.Position:=90;
     fs.Free;
   end
   else
@@ -1934,11 +2008,11 @@ begin
     c:=CubieCube.Create;
     d:=CubieCube.Create;
     SetLength(SymState,2768);
-    Form1.SetUpProgressBar(0,2768-1,'Analyzing...');
+    // Form1.SetUpProgressBar(0,2768-1,'Analyzing...');
     for i:= 0 to 2768-1 do
     begin
-      Form1.ProgressBar.Position:=i;
-      if i and $ff =0 then Application.ProcessMessages;
+      // Form1.ProgressBar.Position:=i;
+      // if i and $ff =0 then Application.ProcessMessages;
       z:= SymCornPosToCornPos[i];//symmetry part is 0
       c.InvCornPermCoord(z);
 
@@ -1953,24 +2027,23 @@ begin
         end;
       end;
     end;
-
     for i:=0 to 2768*40320 div 16 do PruningPhase2[i]:=-1;
     SetPruningPhase2(0,0);
     done:=1;
     depth:=-1;
     realDepth:=-1;
-    Form1.SetUpProgressBar(0,18,'Creating '+fn+' (21.2 MB)');
+    // Form1.SetUpProgressBar(0,18,'Creating '+fn+' (21.2 MB)');
     while (done<>2768*40320)do
     begin
       if realdepth=12 then flipBackward:=true;
       Inc(realDepth);
-      Form1.ProgressBar.Position:=realDepth;
+      // Form1.ProgressBar.Position:=realDepth;
       Inc(depth);
       depth:= depth mod 3;
 
       for i:=0 to 2768*40320-1 do
       begin
-        if i and $3ffff =0 then Application.ProcessMessages;
+        if i and $3ffff =0 then write('Create Phase2 PruningTable... ', done * 100  div (2768*40320):3,'%',#13);
 
         match:=true;//any value
         case flipBackward of
@@ -2038,11 +2111,11 @@ begin
         end;//if match
       end;//for i
     end;//while done...
-    Form1.ProgressBar.Position:=18;
+    // Form1.ProgressBar.Position:=18;
     fs := TFileStream.Create(fn, fmCreate);
-    Form1.SetUpProgressBar(0,40320 div 5,'Writing '+fn);
+    // Form1.SetUpProgressBar(0,40320 div 5,'Writing '+fn);
     done:=0;
-    Form1.ProgressBar.Position:=done;
+    // Form1.ProgressBar.Position:=done;
     for i:= 0 to (40320 div 5)*2768 - 1 do //compression
     begin
       n:=1;
@@ -2059,8 +2132,8 @@ begin
       begin
         fs.WriteBuffer(buf[0],2768);
         Inc(done);
-        Form1.ProgressBar.Position:=done;
-        Application.ProcessMessages;
+        // Form1.ProgressBar.Position:=done;
+        // Application.ProcessMessages;
       end;
     end;
     fs.Free;
@@ -2069,13 +2142,13 @@ begin
     d.Free;
 
     SetLength(PruningPhase2P,2768*40320 div 5);
-    Application.ProcessMessages;
+    // Application.ProcessMessages;
     fs := TFileStream.Create(fn, fmOpenRead);
     fs.ReadBuffer(PruningPhase2P[0],2768*40320 div 5);
-    Form1.ProgressBar.Position:=90;
+    // Form1.ProgressBar.Position:=90;
     fs.Free;
-
-    Form1.SetUpProgressBar(0,100,'Loading...');
+    logging('Create Phase2 PruningTable to file: ' + fn);
+    // Form1.SetUpProgressBar(0,100,'Loading...');
   end;
 end;
 
@@ -2100,10 +2173,10 @@ begin
   if FileExists(fn) then
   begin
     SetLength(PruningPhase2Q,2768*40320 div 2+2768);
-    Application.ProcessMessages;
+    // Application.ProcessMessages;
     fs := TFileStream.Create(fn, fmOpenRead);
     fs.ReadBuffer(PruningPhase2Q[0],2768*40320 div 2+2768);
-    Form1.ProgressBar.Position:=90;
+    // Form1.ProgressBar.Position:=90;
     fs.Free;
   end
   else
@@ -2112,11 +2185,11 @@ begin
     c:=CubieCube.Create;
     d:=CubieCube.Create;
     SetLength(SymState,2768);
-    Form1.SetUpProgressBar(0,2768-1,'Analyzing...');
+    // Form1.SetUpProgressBar(0,2768-1,'Analyzing...');
     for i:= 0 to 2768-1 do
     begin
-      Form1.ProgressBar.Position:=i;
-      if i and $ff =0 then Application.ProcessMessages;
+      // Form1.ProgressBar.Position:=i;
+      // if i and $ff =0 then Application.ProcessMessages;
       z:= SymCornPosToCornPos[i];//symmetry part is 0
       c.InvCornPermCoord(z);
 
@@ -2142,22 +2215,22 @@ begin
 
     done:=1;
     depth:=-1;
-    Form1.SetUpProgressBar(0,30,'Creating '+fn+' (53.2 MB)');
+    // Form1.SetUpProgressBar(0,30,'Creating '+fn+' (53.2 MB)');
     while (done<>2768*40320)do
     begin
-      Form1.ProgressBar.Position:=depth;
+      // Form1.ProgressBar.Position:=depth;
       Inc(depth);
 
-      for i:=0 to 2768*40320-1 do  //hier erst mal nur mit den Drehungen der Länge 1
+      for i:=0 to 2768*40320-1 do  //hier erst mal nur mit den Drehungen der Lï¿½nge 1
       begin
-        if i and $3ffff =0 then Application.ProcessMessages;
+        // if i and $3ffff =0 then Application.ProcessMessages;
 
         if PruningPhase2Q[i]=depth then
         begin
           edge8Pos0:= i div 2768;
           symCornPos0:= i mod 2768;
           cornPos0:=SymCornPosToCornPos[symCornPos0];
-          for m:= Ux1 to Bx3 do//Usx3 do//slice mode funktioniert nicht mit Komprimierung, da Usx etc die Parität nicht ändert
+          for m:= Ux1 to Bx3 do//Usx3 do//slice mode funktioniert nicht mit Komprimierung, da Usx etc die Paritï¿½t nicht ï¿½ndert
           begin
             if (not sliceMode) and (m=Usx1) then break;
             case m of
@@ -2204,9 +2277,9 @@ begin
 
     if depth>0 then
     begin
-      for i:=0 to 2768*40320-1 do  //hier mit den Drehungen der Länge 2
+      for i:=0 to 2768*40320-1 do  //hier mit den Drehungen der Lï¿½nge 2
       begin
-        if i and $3ffff =0 then Application.ProcessMessages;
+        // if i and $3ffff =0 then Application.ProcessMessages;
 
 
         if PruningPhase2Q[i]=depth-1 then
@@ -2261,7 +2334,7 @@ begin
 
     SetLength(depthmod2Remain,2768);
     for i:= 0 to 2768-1 do
-      depthmod2Remain[i]:= PruningPhase2Q[i] mod 2;//ob gerade oder ungerade Tiefe hängt nur von der symcornpos ab
+      depthmod2Remain[i]:= PruningPhase2Q[i] mod 2;//ob gerade oder ungerade Tiefe hï¿½ngt nur von der symcornpos ab
     SetLength(buffer,2768*40320 div 2);
     For i:=0 to 2768*40320 div 2 -1 do buffer[i]:=0;
     // die Werte jetzt packen
@@ -2270,23 +2343,23 @@ begin
       buffer[i]:= (PruningPhase2Q[2*i] div 2) or  ((PruningPhase2Q[2*i+1] div 2) shl 4);//Werte<=15
     end;
     Finalize(PruningPhase2Q);
-    Application.ProcessMessages;
+    // Application.ProcessMessages;
     fs := TFileStream.Create(fn, fmCreate);
     fs.WriteBuffer(buffer[0],2768*40320 div 2);
     fs.WriteBuffer(depthmod2remain[0],2768);
-    Form1.ProgressBar.Position:=90;
+    // Form1.ProgressBar.Position:=90;
     fs.Free;
     c.Free;
     d.Free;
     Finalize(depthmod2Remain);
 
     SetLength(PruningPhase2Q,2768*40320 div 2+2768);  //in komprimierter Form neu laden
-    Application.ProcessMessages;
+    // Application.ProcessMessages;
     fs := TFileStream.Create(fn, fmOpenRead);
     fs.ReadBuffer(PruningPhase2Q[0],2768*40320 div 2+2768);
     fs.Free;
 
-    Form1.SetUpProgressBar(0,100,'Loading...');
+    // Form1.SetUpProgressBar(0,100,'Loading...');
   end;
 end;
 {$IFEND}
@@ -2315,10 +2388,10 @@ begin
   if FileExists(filename) then
   begin
     SetLength(PruningFullCorner,2768*2187 div 16 + 1);
-    Application.ProcessMessages;
+    // Application.ProcessMessages;
     fs := TFileStream.Create(filename, fmOpenRead);
     fs.ReadBuffer(PruningFullCorner[0],1513408);//  (2768*2187 div 16 + 1)*4
-    Form1.ProgressBar.Position:=90;//evtl ändern!!!
+    // Form1.ProgressBar.Position:=90;//evtl ï¿½ndern!!!
     fs.Free;
   end
   else
@@ -2328,11 +2401,11 @@ begin
     c:=CubieCube.Create;
     d:=CubieCube.Create;
     SetLength(SymState,2768);
-    Form1.SetUpProgressBar(0,2768-1,'Analyzing...');
+    // Form1.SetUpProgressBar(0,2768-1,'Analyzing...');
     for i:= 0 to 2768-1 do
     begin
-      Form1.ProgressBar.Position:=i;
-      if i and $ff =0 then Application.ProcessMessages;
+      // Form1.ProgressBar.Position:=i;
+      // if i and $ff =0 then Application.ProcessMessages;
       z:= SymCornPosToCornPos[i];//symmetry part is 0
       c.InvCornPermCoord(z);
 
@@ -2353,18 +2426,18 @@ begin
     done:=1;
     depth:=-1;
     realDepth:=-1;
-    Form1.SetUpProgressBar(0,11,'Creating '+filename+' (1.4 MB)');
+    // Form1.SetUpProgressBar(0,11,'Creating '+filename+' (1.4 MB)');
     while (done<>2768*2187)do
     begin
       if realdepth=8 then flipBackward:=true;
       Inc(realDepth);
-      Form1.ProgressBar.Position:=realDepth;
+      // Form1.ProgressBar.Position:=realDepth;
       Inc(depth);
       depth:= depth mod 3;
 
       for i:=0 to 2768*2187-1 do
       begin
-        if i and $3ffff =0 then Application.ProcessMessages;
+        // if i and $3ffff =0 then Application.ProcessMessages;
 
         match:=true;//any value
         case flipBackward of
@@ -2378,7 +2451,7 @@ begin
           cori0:= i div 2768;
           symCPerm0:= i mod 2768;
           cPerm0:=SymCornPosToCornPos[symCPerm0];
-          for m:= Ux1 to Fsx3 do //slice moves ergänzt
+          for m:= Ux1 to Fsx3 do //slice moves ergï¿½nzt
           begin
           if (not useSlice) and (m=Usx1) then break;
           {$IF QTM}
@@ -2435,12 +2508,12 @@ begin
         end;//if match
       end;//for i
     end;//while done...
-    Form1.ProgressBar.Position:=12;
-    Application.ProcessMessages;
+    // Form1.ProgressBar.Position:=12;
+    // Application.ProcessMessages;
 
     fs := TFileStream.Create(filename, fmCreate);
     fs.WriteBuffer(PruningFullCorner[0],1513408);
-    Form1.ProgressBar.Position:=90;//evtl ändern!!!
+    // Form1.ProgressBar.Position:=90;//evtl ï¿½ndern!!!
     fs.Free;
     c.Free;
     d.Free;
@@ -2473,9 +2546,9 @@ begin
 {$ELSE}
   if sliceMode then filename:= 'bigPQs.prun'   else filename:='bigPQ.prun';
 {$IFEND}
-  Form1.SetUpProgressBar(0,788,'Initializing memory. Please wait...');
-  Form1.ProgressLabel.Visible:=true;
-  Form1.Progressbar.Visible:=true;
+  // Form1.SetUpProgressBar(0,788,'Initializing memory. Please wait...');
+  // Form1.ProgressLabel.Visible:=true;
+  // Form1.Progressbar.Visible:=true;
   fs:=nil;
   SetCurrentDir(ExtractFilePath(Paramstr(0)));//Cube Explorer directory
   if FileExists(filename) then
@@ -2483,40 +2556,40 @@ begin
     try
        SetLength(PruningBigP,705886618);//788*2187*2048 div 5 + 1 (=766*921523)
     except
-      Application.MessageBox(PChar(Err[17]),'',MB_ICONWARNING);
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
+      // Application.MessageBox(PChar(Err[17]),'',MB_ICONWARNING);
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
       USES_BIG:=false;
-      OptOptionForm.CheckUseHuge.Checked:=false;
+      // OptOptionForm.CheckUseHuge.Checked:=false;
       Exit;
     end;
     try
       fs := TFileStream.Create(filename, fmOpenRead);
-      Form1.SetUpProgressBar(0,766,'Loading '+filename+' (673 MB)');
-      Application.ProcessMessages;
+      // Form1.SetUpProgressBar(0,766,'Loading '+filename+' (673 MB)');
+      // Application.ProcessMessages;
       for i:= 0 to 766-1 do
       begin
         fs.ReadBuffer(PruningBigP[i*921523],921523);
-        Form1.ProgressBar.Position:=i;
-        Application.ProcessMessages;
+        // Form1.ProgressBar.Position:=i;
+        // Application.ProcessMessages;
       end;
       fs.Free;
-      Form1.ProgressBar.Visible:= false;
-      Form1.ProgressLabel.Visible:=false;
+      // Form1.ProgressBar.Visible:= false;
+      // Form1.ProgressLabel.Visible:=false;
     except
       fs.Free;
-      Application.MessageBox(PChar(Err[18]),'',MB_ICONWARNING);
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
+      // Application.MessageBox(PChar(Err[18]),'',MB_ICONWARNING);
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
       Finalize(PruningBigP);
       USES_BIG:=false;//not necessary here
-      OptOptionForm.CheckUseHuge.Checked:=false;//also sets USES_BIG
+      // OptOptionForm.CheckUseHuge.Checked:=false;//also sets USES_BIG
       Exit;
     end;
   end
   else
   begin
-    Application.ProcessMessages;
+    // Application.ProcessMessages;
     {$IF not QTM}
     SetLength(PruningPhase2P,0);//Gibt es in QTM nicht
     {$IFEND}
@@ -2525,23 +2598,23 @@ begin
     try
       SetLength(PruningBig,788*2187*128 + 1);
     except
-      Application.MessageBox(PChar(Err[17]),'',MB_ICONWARNING);
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
+      // Application.MessageBox(PChar(Err[17]),'',MB_ICONWARNING);
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
       USES_BIG:=false;
-      OptOptionForm.CheckUseHuge.Checked:=false;
+      // OptOptionForm.CheckUseHuge.Checked:=false;
       CreateFlipUDSlicePruningTable;
       CreatePhase2PruningTable;
       Exit;
     end;
-    Form1.ProgressLabel.Caption:='';
-    if Application.MessageBox(PChar(Err[20]),'',MB_ICONWARNING or MB_YESNO)<>IDYES then
+    // Form1.ProgressLabel.Caption:='';
+    // if Application.MessageBox(PChar(Err[20]),'',MB_ICONWARNING or MB_YESNO)<>IDYES then
     begin
       PruningBig:=nil;//release memory
       USES_BIG:=false;
-      OptOptionForm.CheckUseHuge.Checked:=false;
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
+      // OptOptionForm.CheckUseHuge.Checked:=false;
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
       Exit;
     end;
     flipBackward:=false;//flip to backward search if true
@@ -2563,12 +2636,12 @@ begin
         end;
       end;
     end;
-    Form1.ProgressBar.Position:=0;
-    Form1.SetUpProgressBar(0,14,'Creating '+filename+' (673 MB)');
+    // Form1.ProgressBar.Position:=0;
+    // Form1.SetUpProgressBar(0,14,'Creating '+filename+' (673 MB)');
     for i:=0 to 788*2187*128 do
     begin
       PruningBig[i]:=-1;
-      if (i and $8ffff)=0 then Application.ProcessMessages;
+      // if (i and $8ffff)=0 then Application.ProcessMessages;
     end;
     SetPruningBig(0,0);
     done:=1;
@@ -2582,12 +2655,12 @@ begin
       if realdepth=10 then flipBackward:=true;
       {$IFEND}
       Inc(realDepth);
-      Form1.ProgressBar.Position:=realDepth;
+      // Form1.ProgressBar.Position:=realDepth;
       Inc(depth);
       depth:= depth mod 3;
       for i:=0 to 788*2048-1 do
       begin
-        if i and $ff =0 then Application.ProcessMessages;
+        // if i and $ff =0 then Application.ProcessMessages;
         idx:=Int64(i)*2187;
         match:=true;//any value
         for k:=0 to 2187-1 do
@@ -2668,12 +2741,12 @@ begin
         end;
       end;
     end;
-    Form1.ProgressBar.Position:=12;
+    // Form1.ProgressBar.Position:=12;
 
     fs := TFileStream.Create(filename, fmCreate);
-    Form1.SetUpProgressBar(0,705886618 div 3379,'Writing '+filename);
+    // Form1.SetUpProgressBar(0,705886618 div 3379,'Writing '+filename);
     done:=0;
-    Form1.ProgressBar.Position:=done;
+    // Form1.ProgressBar.Position:=done;
     try
       for i:= 0 to 705886618 - 1 - 2 do //compression, last two bytes special handling
       begin                             // because no 5. entry there
@@ -2691,8 +2764,8 @@ begin
         begin
           fs.WriteBuffer(buf[0],3379);
           Inc(done);
-          Form1.ProgressBar.Position:=done;
-          Application.ProcessMessages;
+          // Form1.ProgressBar.Position:=done;
+          // Application.ProcessMessages;
         end;
       end;
       for i:= 705886618 - 1 - 1 to 705886618 - 1 do //special handling
@@ -2708,13 +2781,13 @@ begin
         fs.WriteBuffer(value,1);
       end;
     except
-      Application.MessageBox(PChar(Err[19]),'',MB_ICONWARNING);
+      // Application.MessageBox(PChar(Err[19]),'',MB_ICONWARNING);
       fs.Free;
       if FileExists(PChar(filename)) then DeleteFile(PChar(filename));//delete incomplete file
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
       USES_BIG:=false;//not necessary here
-      OptOptionForm.CheckUseHuge.Checked:=false;//also sets USES_BIG
+      // OptOptionForm.CheckUseHuge.Checked:=false;//also sets USES_BIG
       Finalize(PruningBig);
       CreateFlipUDSlicePruningTable;//load again
       CreatePhase2PruningTable;
@@ -2727,28 +2800,28 @@ begin
     SetLength(PruningBigP,705886618);
     try
       fs := TFileStream.Create(filename, fmOpenRead);
-      Form1.SetUpProgressBar(0,766,'Loading '+filename+' (673 MB)');
-      Application.ProcessMessages;
+      // Form1.SetUpProgressBar(0,766,'Loading '+filename+' (673 MB)');
+      // Application.ProcessMessages;
       for i:= 0 to 766-1 do
       begin
         fs.ReadBuffer(PruningBigP[i*921523],921523);
-        Form1.ProgressBar.Position:=i;
-        Application.ProcessMessages;
+        // Form1.ProgressBar.Position:=i;
+        // Application.ProcessMessages;
       end;
       fs.Free;
     except
       fs.Free;
-      Application.MessageBox(PChar(Err[18]),'',MB_ICONWARNING);
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
+      // Application.MessageBox(PChar(Err[18]),'',MB_ICONWARNING);
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
       USES_BIG:=false;//not necessary here
-      OptOptionForm.CheckUseHuge.Checked:=false;//also sets USES_BIG
+      // OptOptionForm.CheckUseHuge.Checked:=false;//also sets USES_BIG
       CreateFlipUDSlicePruningTable;//load again
       CreatePhase2PruningTable;
       Exit;
     end;
-    Form1.ProgressBar.Visible:= false;
-    Form1.ProgressLabel.Visible:=false;
+    // Form1.ProgressBar.Visible:= false;
+    // Form1.ProgressLabel.Visible:=false;
     CreateFlipUDSlicePruningTable;//load tables again again
     CreatePhase2PruningTable;
   end;
@@ -2761,7 +2834,7 @@ var c1,c2: CubieCube; prodC: CornerCubie; i,j: Integer;
 begin
   c1:= CubieCube.Create;
   c2:= CubieCube.Create;
-  Application.ProcessMessages;
+  // Application.ProcessMessages;
   for i:=0 to 2187-1 do
   begin
     c1.InvCornOriCoord(i);
@@ -2783,7 +2856,7 @@ var c1,c2: CubieCube; prodCn: CenterCubie; i,j: Integer;
 begin
   c1:= CubieCube.Create;
   c2:= CubieCube.Create;
-  Application.ProcessMessages;
+  // Application.ProcessMessages;
   for i:=0 to 16-1 do
   begin
     c1.InvCentOriRFLBMod2Coord(i);
@@ -2806,7 +2879,7 @@ var c1,c2: CubieCube; prodE: EdgeCubie; i,j: Integer;
 begin
   c1:= CubieCube.Create;
   c2:= CubieCube.Create;
-  Application.ProcessMessages;
+  // Application.ProcessMessages;
   for i:=0 to 495-1 do
   begin
     c1.InvUDSliceCoord(i);
@@ -2830,7 +2903,7 @@ var c1,c2: CubieCube; prodC: CornerCubie; i,j: Integer;
 begin
   c1:= CubieCube.Create;
   c2:= CubieCube.Create;
-  Application.ProcessMessages;
+  // Application.ProcessMessages;
   for i:=0 to 70-1 do
   begin
     c1.InvTetraCoord(i);
@@ -2858,11 +2931,11 @@ begin
   c1:= CubieCube.Create;
   c2:= CubieCube.Create;
   c3:= CubieCube.Create;
-  Form1.SetUpProgressBar(0,788,'Analyzing...');
+  // Form1.SetUpProgressBar(0,788,'Analyzing...');
   for k:=0 to 788-1 do
   begin
-    Form1.ProgressBar.Position:=k;
-    Application.ProcessMessages;
+    // Form1.ProgressBar.Position:=k;
+    // Application.ProcessMessages;
     m:= UDSliceSortedSymToUDSliceSorted[k];//maps class index to representant
     c1.InvUDSliceSortedCoord(m);
     for j:= 0 to 15 do
@@ -2892,7 +2965,7 @@ begin
   c2:= CubieCube.Create;
   for i:=0 to 40320-1 do
   begin
-    if i and $fff=0 then Application.ProcessMessages;
+    // if i and $fff=0 then Application.ProcessMessages;
     c1.InvPhase2EdgePermCoord(i);
     for j:= 0 to 15 do
     begin
@@ -2903,7 +2976,7 @@ begin
   end;
   c1.free;
   c2.free;
-  Form1.ProgressBar.Position:=80;
+  // Form1.ProgressBar.Position:=80;
 end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -2915,7 +2988,7 @@ begin
   c2:= CubieCube.Create;
   for i:=0 to 24-1 do
   begin
-    if i and $fff=0 then Application.ProcessMessages;
+    // if i and $fff=0 then Application.ProcessMessages;
     c1.InvUDSliceSortedCoord(i);
     for j:= 0 to 15 do
     begin
@@ -2937,7 +3010,7 @@ var c1,c2: CubieCube; prodC: CornerCubie; i,j: Integer;
 begin
   c1:= CubieCube.Create;
   c2:= CubieCube.Create;
-  Application.ProcessMessages;
+  // Application.ProcessMessages;
   for i:=0 to 40320-1 do
   begin
     c1.InvCornPermCoord(i);
@@ -2973,7 +3046,7 @@ begin
   CreateFlipUDSlicePruningTable; //phase 1 standard
   CreatePhase2PruningTable;//phase 2 standard
 
-   if ( OptOptionForm.CheckUseHuge.Checked=true) then
+   if ( useHuge=true) then
     {$IF UHUGE}
     CreateUltraBigPruningTable;
  //   CreateCenTwistUDSliceSortedPruningTable;
@@ -3048,7 +3121,7 @@ end;
 
 //++++++++Find the Phase 1 and optimal solver initial pruning value+++++++++++++
 Function CoordCube.GetPrun(direction:Integer):Integer;
-var depth,depthMod3,flipSlice0,flipSlice1,Twist0,Twist1,sym,index: Integer;
+var depth,depthMod3,flipSlice0,flipSlice1,Twist0,Twist1,_sym,index: Integer;
     m: Move;
 begin
   flipSlice0:=0;
@@ -3057,20 +3130,20 @@ begin
     0:
     begin
       flipSlice0:= flipUDSlice.n;
-      sym:= flipUDSlice.s;
-      Twist0:= TwistConjugate[UDTwist,sym];
+      _sym:= flipUDSlice.s;
+      Twist0:= TwistConjugate[UDTwist,_sym];
     end;
     1:
     begin
       flipSlice0:= flipRLSlice.n;
-      sym:= flipRLSlice.s;
-      Twist0:= TwistConjugate[RLTwist,sym];
+      _sym:= flipRLSlice.s;
+      Twist0:= TwistConjugate[RLTwist,_sym];
     end;
     2:
     begin
       flipSlice0:= flipFBSlice.n;
-      sym:= flipFBSlice.s;
-      Twist0:= TwistConjugate[FBTwist,sym];
+      _sym:= flipFBSlice.s;
+      Twist0:= TwistConjugate[FBTwist,_sym];
     end;
   end;
   depth:=0;
@@ -3088,9 +3161,9 @@ begin
      {$IFEND}
        flipSlice1:= flipSliceMove[flipSlice0,Ord(m)];
        Twist1:= TwistMove[Twist0,m];
-       sym:= flipSlice1 and 15;
+       _sym:= flipSlice1 and 15;
        flipSlice1:= flipSlice1 shr 4;
-       Twist1:=TwistConjugate[Twist1,sym];
+       Twist1:=TwistConjugate[Twist1,_sym];
        index:= 2187*flipSlice1+Twist1;
        if GetPruningP(index)= depthMod3-1 then //closer to start
        begin
@@ -3110,7 +3183,7 @@ end;
 //++Find the cent-Phase 1 and cent-optimal solver initial pruning value+++++++++
 Function CoordCube.GetCentPrun(direction:Integer):Integer;
 var depth,depthMod3,flipSlice0,flipSlice1,Twist0,Twist1,
-    cent0,cent1,sym: Integer;
+    cent0,cent1,_sym: Integer;
     index:Cardinal;
     m: Move;
 begin
@@ -3122,23 +3195,23 @@ begin
     0:
     begin
       flipSlice0:= flipUDSlice.n;
-      sym:= flipUDSlice.s;
-      Twist0:= TwistConjugate[UDTwist,sym];
-      cent0:=CentOriRFLBMod2Conjugate[UDCentRFLBMod2Twist,sym];
+      _sym:= flipUDSlice.s;
+      Twist0:= TwistConjugate[UDTwist,_sym];
+      cent0:=CentOriRFLBMod2Conjugate[UDCentRFLBMod2Twist,_sym];
     end;
     1:
     begin
       flipSlice0:= flipRLSlice.n;
-      sym:= flipRLSlice.s;
-      Twist0:= TwistConjugate[RLTwist,sym];
-      cent0:=CentOriRFLBMod2Conjugate[RLCentRFLBMod2Twist,sym];
+      _sym:= flipRLSlice.s;
+      Twist0:= TwistConjugate[RLTwist,_sym];
+      cent0:=CentOriRFLBMod2Conjugate[RLCentRFLBMod2Twist,_sym];
     end;
     2:
     begin
       flipSlice0:= flipFBSlice.n;
-      sym:= flipFBSlice.s;
-      Twist0:= TwistConjugate[FBTwist,sym];
-      cent0:=CentOriRFLBMod2Conjugate[FBCentRFLBMod2Twist,sym];
+      _sym:= flipFBSlice.s;
+      Twist0:= TwistConjugate[FBTwist,_sym];
+      cent0:=CentOriRFLBMod2Conjugate[FBCentRFLBMod2Twist,_sym];
     end;
   end;
   depth:=0;
@@ -3157,10 +3230,10 @@ begin
        flipSlice1:= flipSliceMove[flipSlice0,Ord(m)];
        Twist1:= TwistMove[Twist0,m];
        cent1:= CentOriRFLBMod2Move[cent0,m];
-       sym:= flipSlice1 and 15;
+       _sym:= flipSlice1 and 15;
        flipSlice1:= flipSlice1 shr 4;
-       Twist1:=TwistConjugate[Twist1,sym];
-       cent1:=CentOriRFLBMod2Conjugate[cent1,sym];
+       Twist1:=TwistConjugate[Twist1,_sym];
+       cent1:=CentOriRFLBMod2Conjugate[cent1,_sym];
        index:= (Int64(flipSlice1)*16 + cent1)*2187+twist1;
        if GetPruningCentP(index)= depthMod3-1 then //closer to start
        begin
@@ -3272,7 +3345,7 @@ end;
 //+++++++++++++++++++Find the Big optimal solvers initial pruning value+++++++++
 function CoordCube.GetPrunBig(direction: Integer):Integer;
 var depth,depthMod3,SliceSortedSym_0,SliceSortedSym_1,
-    Twist_0,Twist_1,Flip_0,Flip_1,sym: Integer;
+    Twist_0,Twist_1,Flip_0,Flip_1,_sym: Integer;
     index:Cardinal;
     m: Move;
 
@@ -3284,24 +3357,24 @@ begin
     0:
     begin
       SliceSortedSym_0:=UDSliceSortedSym.n;
-      sym:= UDSliceSortedSym.s;
-      Flip_0:=FlipConjugate[UDFlip,sym,SliceSortedSym_0];
-      Twist_0:=TwistConjugate[UDTwist,sym];
+      _sym:= UDSliceSortedSym.s;
+      Flip_0:=FlipConjugate[UDFlip,_sym,SliceSortedSym_0];
+      Twist_0:=TwistConjugate[UDTwist,_sym];
 
     end;
     1:
     begin
       SliceSortedSym_0:=RLSliceSortedSym.n;
-      sym:= RLSliceSortedSym.s;
-      Flip_0:=FlipConjugate[RLFlip,sym,SliceSortedSym_0];
-      Twist_0:=TwistConjugate[RLTwist,sym];
+      _sym:= RLSliceSortedSym.s;
+      Flip_0:=FlipConjugate[RLFlip,_sym,SliceSortedSym_0];
+      Twist_0:=TwistConjugate[RLTwist,_sym];
     end;
     2:
     begin
       SliceSortedSym_0:=FBSliceSortedSym.n;
-      sym:= FBSliceSortedSym.s;
-      Flip_0:=FlipConjugate[FBFlip,sym,SliceSortedSym_0];
-      Twist_0:=TwistConjugate[FBTwist,sym];
+      _sym:= FBSliceSortedSym.s;
+      Flip_0:=FlipConjugate[FBFlip,_sym,SliceSortedSym_0];
+      Twist_0:=TwistConjugate[FBTwist,_sym];
     end;
   end;
   depth:=0;
@@ -3321,10 +3394,10 @@ begin
        SliceSortedSym_1:= UDSliceSortedSymMove[SliceSortedSym_0,m];
        Flip_1:= FlipMove[Flip_0,m];
        Twist_1:=TwistMove[Twist_0,m];
-       sym:= SliceSortedSym_1 and 15;
+       _sym:= SliceSortedSym_1 and 15;
        SliceSortedSym_1:= SliceSortedSym_1 shr 4;
-       Flip_1:=FlipConjugate[Flip_1,sym,SliceSortedSym_1];
-       Twist_1:=TwistConjugate[Twist_1,sym];
+       Flip_1:=FlipConjugate[Flip_1,_sym,SliceSortedSym_1];
+       Twist_1:=TwistConjugate[Twist_1,_sym];
        index:= (Int64(SliceSortedSym_1)*2048 +flip_1)*2187+twist_1;
        if GetPruningBigP(index)= depthMod3-1 then
        begin
@@ -3344,7 +3417,7 @@ end;
 
 //+++++++++++++++++++Find the UltraBig optimal solvers initial pruning value+++++++++
 function CoordCube.GetPrunUBig(direction: Integer):Integer;
-var depth,depthMod3,flipSlice0,flipSlice1,Twist0,Twist1,Tetra0,Tetra1,sym,index:Integer;
+var depth,depthMod3,flipSlice0,flipSlice1,Twist0,Twist1,Tetra0,Tetra1,_sym,index:Integer;
     m: Move;
 begin
   flipSlice0:=0;
@@ -3354,23 +3427,23 @@ begin
     0:
     begin
       flipSlice0:= flipUDSlice.n;
-      sym:= flipUDSlice.s;
-      Twist0:= TwistConjugate[UDTwist,sym];
-      Tetra0:= TetraConjugate[UDTetra,sym];
+      _sym:= flipUDSlice.s;
+      Twist0:= TwistConjugate[UDTwist,_sym];
+      Tetra0:= TetraConjugate[UDTetra,_sym];
     end;
     1:
     begin
       flipSlice0:= flipRLSlice.n;
-      sym:= flipRLSlice.s;
-      Twist0:= TwistConjugate[RLTwist,sym];
-      Tetra0:= TetraConjugate[RLTetra,sym];
+      _sym:= flipRLSlice.s;
+      Twist0:= TwistConjugate[RLTwist,_sym];
+      Tetra0:= TetraConjugate[RLTetra,_sym];
     end;
     2:
     begin
       flipSlice0:= flipFBSlice.n;
-      sym:= flipFBSlice.s;
-      Twist0:= TwistConjugate[FBTwist,sym];
-      Tetra0:= TetraConjugate[FBTetra,sym];
+      _sym:= flipFBSlice.s;
+      Twist0:= TwistConjugate[FBTwist,_sym];
+      Tetra0:= TetraConjugate[FBTetra,_sym];
     end;
   end;
   depth:=0;
@@ -3389,10 +3462,10 @@ begin
        flipSlice1:= flipSliceMove[flipSlice0,Ord(m)];
        Twist1:= TwistMove[Twist0,m];
        Tetra1:= TetraMove[Tetra0,m];
-       sym:= flipSlice1 and 15;
+       _sym:= flipSlice1 and 15;
        flipSlice1:= flipSlice1 shr 4;
-       Twist1:=TwistConjugate[Twist1,sym];
-       Tetra1:=TetraConjugate[Tetra1,sym];
+       Twist1:=TwistConjugate[Twist1,_sym];
+       Tetra1:=TetraConjugate[Tetra1,_sym];
        index:= 2187*flipSlice1+Twist1;
        if GetPruningUBigP(index,@PruningUBigP[Tetra1])= depthMod3-1 then //closer to start
        begin
@@ -3425,42 +3498,23 @@ end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //+++++++++++++++++++++++Print some coordinates for debugging+++++++++++++++++++
-procedure CoordCube.Print(c: TCanvas; x, y: Integer);
+procedure CoordCube.Print();
 begin
-  c.Brush.Color:=clWhite;
-  c.TextOut(x,y,'                                  ');
-  c.TextOut(x,y,'cornPos: '+IntToStr(cornPos));
-  c.TextOut(x,y+20,'                                  ');
-  c.TextOut(x,y+20,'UDTwist: '+IntToStr(UDTwist));
-  c.TextOut(x,y+40,'                                        ');
-  c.TextOut(x,y+40,'flipUDSlice: ' + IntToStr(flipUDSlice.n) +'|'+ IntToStr(flipUDSlice.s));
-  c.TextOut(x,y+60,'                                  ');
-  c.TextOut(x,y+60,'RLTwist: '+IntToStr(RLTwist));
-  c.TextOut(x,y+80,'                                        ');
-  c.TextOut(x,y+80,'flipRLSlice: ' + IntToStr(flipRLSlice.n) +'|'+ IntToStr(flipRLSlice.s));
-  c.TextOut(x,y+100,'                                  ');
-  c.TextOut(x,y+100,'FBTwist: '+IntToStr(FBTwist));
-  c.TextOut(x,y+120,'                                        ');
-  c.TextOut(x,y+120,'flipFBSlice: ' + IntToStr(flipFBSlice.n) +'|'+ IntToStr(flipFBSlice.s));
-  c.TextOut(x,y+140,'                                        ');
-  c.TextOut(x,y+140,'edge8Pos: ' + IntToStr(edge8Pos));
-  c.TextOut(x,y+160,'                                        ');
-  c.TextOut(x,y+160,'UDSliceSorted: ' + IntToStr(UDSliceSorted));
-  c.TextOut(x,y+180,'                                        ');
-  c.TextOut(x,y+180,'RLSliceSorted: ' + IntToStr(RLSliceSorted));
-  c.TextOut(x,y+200,'                                        ');
-  c.TextOut(x,y+200,'FBSliceSorted: ' + IntToStr(FBSliceSorted));
-  c.TextOut(x,y+220,'                                                   ');
-  c.TextOut(x,y+220,'UDSliceSortedSym: ' + IntToStr(UDSLiceSortedSym.n) +'|'+ IntToStr(UDSLiceSortedSym.s));
-  c.TextOut(x,y+240,'                                                   ');
-  c.TextOut(x,y+240,'RLSliceSortedSym: ' + IntToStr(RLSliceSortedSym.n) +'|'+ IntToStr(RLSliceSortedSym.s));
-  c.TextOut(x,y+260,'                                                   ');
-  c.TextOut(x,y+260,'FBSliceSortedSym: ' + IntToStr(FBSliceSortedSym.n) +'|'+ IntToStr(FBSliceSortedSym.s));
-  c.TextOut(x,y+280,'                                  ');
-//  c.TextOut(x,y+280,'Depth: '+IntToStr(GetPrunBig(2)));
-//  c.TextOut(x,y+300,'                                  ');
-   c.TextOut(x,y+200,'Corn8Perm: ' + IntToStr(GetCorn8Perm[cornPos]));
-   c.TextOut(x,y+220,'                                                   ');
+  writeln('cornPos: '+IntToStr(cornPos));
+  writeln('UDTwist: '+IntToStr(UDTwist));
+  writeln('flipUDSlice: ' + IntToStr(flipUDSlice.n) +'|'+ IntToStr(flipUDSlice.s));
+  writeln('RLTwist: '+IntToStr(RLTwist));
+  writeln('flipRLSlice: ' + IntToStr(flipRLSlice.n) +'|'+ IntToStr(flipRLSlice.s));
+  writeln('FBTwist: '+IntToStr(FBTwist));
+  writeln('flipFBSlice: ' + IntToStr(flipFBSlice.n) +'|'+ IntToStr(flipFBSlice.s));
+  writeln('edge8Pos: ' + IntToStr(edge8Pos));
+  writeln('UDSliceSorted: ' + IntToStr(UDSliceSorted));
+  writeln('RLSliceSorted: ' + IntToStr(RLSliceSorted));
+  writeln('FBSliceSorted: ' + IntToStr(FBSliceSorted));
+  writeln('UDSliceSortedSym: ' + IntToStr(UDSLiceSortedSym.n) +'|'+ IntToStr(UDSLiceSortedSym.s));
+  writeln('RLSliceSortedSym: ' + IntToStr(RLSliceSortedSym.n) +'|'+ IntToStr(RLSliceSortedSym.s));
+  writeln('FBSliceSortedSym: ' + IntToStr(FBSliceSortedSym.n) +'|'+ IntToStr(FBSliceSortedSym.s));
+  writeln('Corn8Perm: ' + IntToStr(GetCorn8Perm[cornPos]));
 end;
 //+++++++++++++++++End Print some coordinates for debugging+++++++++++++++++++++
 
@@ -3487,7 +3541,7 @@ var i,j,n,k,t,depth,realDepth,Tetra, Tetra0,UDtwist,UDtwist0,flipUDSlice,flipUDS
     positions, positionsM, internal: array[0..15] of Int64;
 {$IFEND}
 
-    buf: array[0..2187-1] of Byte;  // Chunks der Länge 2187 Byte
+    buf: array[0..2187-1] of Byte;  // Chunks der Lï¿½nge 2187 Byte
     filename:String;
 
 label nextI;
@@ -3498,9 +3552,9 @@ begin
 {$ELSE}
   if sliceMode then fileName:= 'ubigPQs.prun' else fileName:= 'ubigPQ.prun';
 {$IFEND}
-  Form1.SetUpProgressBar(0,70,'Initializing memory. Please wait...'); //????????????????
-  Form1.ProgressLabel.Visible:=true;
-  Form1.Progressbar.Visible:=true;
+  // Form1.SetUpProgressBar(0,70,'Initializing memory. Please wait...'); //????????????????
+  // Form1.ProgressLabel.Visible:=true;
+  // Form1.Progressbar.Visible:=true;
   fs:=nil;
   SetCurrentDir(ExtractFilePath(Paramstr(0)));//Cube Explorer directory
  //Finalize(PruningUBigP);
@@ -3511,64 +3565,64 @@ begin
   begin
     try
        for i:= 0 to 69 do
-         SetLength(PruningUBigP[i],28181682); //2187*64430/5 für alle 70 tetraCoords;
+         SetLength(PruningUBigP[i],28181682); //2187*64430/5 fï¿½r alle 70 tetraCoords;
     except
-      Application.MessageBox(PChar(Err[17]),'',MB_ICONWARNING);
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
+      // Application.MessageBox(PChar(Err[17]),'',MB_ICONWARNING);
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
       USES_BIG:=false;
-      OptOptionForm.CheckUseHuge.Checked:=false;
+      // OptOptionForm.CheckUseHuge.Checked:=false;
       Exit;
     end;
     try
       fs := TFileStream.Create(filename, fmOpenRead);
-      Form1.SetUpProgressBar(0,70,'Loading '+filename+' (1881 MB)');
-      Application.ProcessMessages;
+      // Form1.SetUpProgressBar(0,70,'Loading '+filename+' (1881 MB)');
+      // Application.ProcessMessages;
       for i:= 0 to 70-1 do
       begin
         for j:= 0 to 34-1 do // 2187*64430/5/34=828873 Bytes in Buffer
         begin
           fs.ReadBuffer(PruningUBigP[i][j*828873],828873);
         end;
-       Form1.ProgressBar.Position:=i;
-       Application.ProcessMessages;
+       // Form1.ProgressBar.Position:=i;
+      //  Application.ProcessMessages;
       end;
       fs.Free;
-      Form1.ProgressBar.Visible:= false;
-      Form1.ProgressLabel.Visible:=false;
+      // Form1.ProgressBar.Visible:= false;
+      // Form1.ProgressLabel.Visible:=false;
     except
       fs.Free;
-      Application.MessageBox(PChar(Err[18]),'',MB_ICONWARNING);
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
+      // Application.MessageBox(PChar(Err[18]),'',MB_ICONWARNING);
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
       Finalize(PruningUBigP);// evtl auch arrayelemente einzeln!!
       USES_BIG:=false;//not necessary here
-      OptOptionForm.CheckUseHuge.Checked:=false;//also sets USES_BIG
+      // OptOptionForm.CheckUseHuge.Checked:=false;//also sets USES_BIG
       Exit;
     end;
   end
   else
   begin
-    Application.ProcessMessages;
+    // Application.ProcessMessages;
     try
       for i:= 0 to 69 do
-         SetLength(PruningUBig[i],8806776); //2187*64430 div 16 +1 für alle 70 tetraCoords;
+         SetLength(PruningUBig[i],8806776); //2187*64430 div 16 +1 fï¿½r alle 70 tetraCoords;
     except
-      Application.MessageBox(PChar(Err[17]),'',MB_ICONWARNING);
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
+      // Application.MessageBox(PChar(Err[17]),'',MB_ICONWARNING);
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
       USES_BIG:=false;
-      OptOptionForm.CheckUseHuge.Checked:=false;
+      // OptOptionForm.CheckUseHuge.Checked:=false;
       Exit;
     end;
-    Form1.ProgressLabel.Caption:='';
-    if Application.MessageBox(PChar(Err[20]),'',MB_ICONWARNING or MB_YESNO)<>IDYES then
+    // Form1.ProgressLabel.Caption:='';
+    // if Application.MessageBox(PChar(Err[20]),'',MB_ICONWARNING or MB_YESNO)<>IDYES then
     begin
       for i:= 0 to 69 do  PruningUBig[i]:=nil;//release memory
       USES_BIG:=false;
-      OptOptionForm.CheckUseHuge.Checked:=false;
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
+      // OptOptionForm.CheckUseHuge.Checked:=false;
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
       Exit;
     end;
     flipBackward:=false;//flip to backward search if true
@@ -3577,11 +3631,11 @@ begin
 
     SetLength(SymState,64430);//16 bits in each word, set bit j (0<=j<=15)
                               //if the coordinate has symmety S(j)
-    Form1.SetUpProgressBar(0,64430-1,'Analyzing...');
+    // Form1.SetUpProgressBar(0,64430-1,'Analyzing...');
     for i:= 0 to 64430-1 do
     begin
-      Form1.ProgressBar.Position:=i;
-      if i and $ff =0 then Application.ProcessMessages;
+      // Form1.ProgressBar.Position:=i;
+      // if i and $ff =0 then Application.ProcessMessages;
       z:= FlipUDSliceToRawFlipUDSlice[i];
       c.InvUDSliceCoord(z div 2048);
       c.InvEdgeOriCoord(z mod 2048);//c now is a representant
@@ -3604,23 +3658,23 @@ begin
     done:=1;
     depth:=-1;
     realDepth:=-1;
-    Form1.ProgressBar.Position:=0;
+    // Form1.ProgressBar.Position:=0;
 
-   Form1.SetUpProgressBar(0,13,'Creating '+filename+' (1881 MB)');
+   // Form1.SetUpProgressBar(0,13,'Creating '+filename+' (1881 MB)');
 
 
     while (done<>Int64(64430)*2187*70)do
     begin
       if realdepth=10 then flipBackward:=true;//evtl. auch 9 nehmen
       Inc(realDepth);
-      Form1.ProgressBar.Position:=realDepth;
+      // Form1.ProgressBar.Position:=realDepth;
       Inc(depth);
       depth:= depth mod 3;
 
       for t:= 0 to 70-1 do
       for i:=0 to 64430*2187-1 do
       begin
-        if i and $3ffff =0 then Application.ProcessMessages;
+        // if i and $3ffff =0 then Application.ProcessMessages;
 
         match:=true;//any value
         case flipBackward of
@@ -3685,8 +3739,8 @@ begin
                   SetPruningUBig(i,(depth+1) mod 3,t);
                   Inc(done);
                   goto NextI;
-                 // break;//verlässt nur m-Schleife, eigentlich kann man aber
-                end;    //das nächste i aufrufen!
+                 // break;//verlï¿½sst nur m-Schleife, eigentlich kann man aber
+                end;    //das nï¿½chste i aufrufen!
               end;
             end;
           end;//for m
@@ -3698,9 +3752,9 @@ begin
   //  Form1.ProgressBar.Position:=12;
 
     fs := TFileStream.Create(filename, fmCreate);
-    Form1.SetUpProgressBar(0,70,'Writing '+filename);
+    // Form1.SetUpProgressBar(0,70,'Writing '+filename);
     done:=0;
-    Form1.ProgressBar.Position:=done;
+    // Form1.ProgressBar.Position:=done;
     try
       for t:= 0 to 70-1 do //jeden der 70 Array komprimieren
       begin
@@ -3719,21 +3773,21 @@ begin
           if i mod 2187 = 2186 then
           begin
             fs.WriteBuffer(buf[0],2187);
-            Application.ProcessMessages;
+            // Application.ProcessMessages;
           end;
         end;
         Inc(done);
-        Form1.ProgressBar.Position:=done;
+        // Form1.ProgressBar.Position:=done;
       end;
     except
-      Application.MessageBox(PChar(Err[19]),'',MB_ICONWARNING);
+      // Application.MessageBox(PChar(Err[19]),'',MB_ICONWARNING);
       fs.Free;
       fs:=nil;
       if FileExists(PChar(filename)) then DeleteFile(PChar(filename));//delete incomplete file
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
       USES_BIG:=false;//not necessary here
-      OptOptionForm.CheckUseHuge.Checked:=false;//also sets USES_BIG
+      // OptOptionForm.CheckUseHuge.Checked:=false;//also sets USES_BIG
       Finalize(PruningUBig);
       Exit;
     end;
@@ -3744,44 +3798,44 @@ begin
 
     try
        for i:= 0 to 69 do
-         SetLength(PruningUBigP[i],64430*2187 div 5); //2187*64430/5 für alle 70 tetraCoords;
+         SetLength(PruningUBigP[i],64430*2187 div 5); //2187*64430/5 fï¿½r alle 70 tetraCoords;
     except
-      Application.MessageBox(PChar(Err[17]),'',MB_ICONWARNING);
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
+      // Application.MessageBox(PChar(Err[17]),'',MB_ICONWARNING);
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
       USES_BIG:=false;
-      OptOptionForm.CheckUseHuge.Checked:=false;
+      // OptOptionForm.CheckUseHuge.Checked:=false;
       Exit;
     end;
 
     try
       fs := TFileStream.Create(filename, fmOpenRead);
-      Form1.SetUpProgressBar(0,70,'Loading '+filename+' (1881 MB)');
-      Application.ProcessMessages;
+      // Form1.SetUpProgressBar(0,70,'Loading '+filename+' (1881 MB)');
+      // Application.ProcessMessages;
       for i:= 0 to 70-1 do
       begin
         for j:= 0 to 34-1 do // 64430*2187/5/34=828873 Bytes in Buffer
         begin
           fs.ReadBuffer(PruningUBigP[i][j*828873],828873);
         end;
-       Form1.ProgressBar.Position:=i;
-       Application.ProcessMessages;
+       // Form1.ProgressBar.Position:=i;
+      //  Application.ProcessMessages;
       end;
       fs.Free;
-      Form1.ProgressBar.Visible:= false;
-      Form1.ProgressLabel.Visible:=false;
+      // Form1.ProgressBar.Visible:= false;
+      // Form1.ProgressLabel.Visible:=false;
     except
       fs.Free;
-      Application.MessageBox(PChar(Err[18]),'',MB_ICONWARNING);
-      Form1.ProgressLabel.Visible:=false;
-      Form1.Progressbar.Visible:=false;
+      // Application.MessageBox(PChar(Err[18]),'',MB_ICONWARNING);
+      // Form1.ProgressLabel.Visible:=false;
+      // Form1.Progressbar.Visible:=false;
       Finalize(PruningUBigP);// evtl auch arrayelemente einzeln!!
       USES_BIG:=false;//not necessary here
-      OptOptionForm.CheckUseHuge.Checked:=false;//also sets USES_BIG
+      // OptOptionForm.CheckUseHuge.Checked:=false;//also sets USES_BIG
       Exit;
     end;
-    Form1.ProgressBar.Visible:= false;
-    Form1.ProgressLabel.Visible:=false;
+    // Form1.ProgressBar.Visible:= false;
+    // Form1.ProgressLabel.Visible:=false;
   end;//else
 end;
 //++++++++++++++++++End Create ultrabig pruning table++++++++++++++++++++++++++++++++
