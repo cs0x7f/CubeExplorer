@@ -255,13 +255,13 @@ turn:
     end;
 
     np1^.UDPrunBig:= GetPruningLength[np^.UDPrunBig,GetPruningUBigP(2187*np1^.UDIdx +
-    TwistConjugate[np1^.UDTwist,np1^.UDSym],@PruningUBigP[TetraConjugate[np1^.UDTetra,np1^.UDSym]])];
+    TwistConjugate[np1^.UDTwist,np1^.UDSym],@PruningUBigP[TetraConjugate[np1^.UDTetra,np1^.UDSym]][0])];
 
     np1^.RLPrunBig:= GetPruningLength[np^.RLPrunBig,GetPruningUBigP(2187*np1^.RLIdx +
-     TwistConjugate[np1^.RLTwist,np1^.RLSym],@PruningUBigP[TetraConjugate[np1^.RLTetra,np1^.RLSym]])];
+     TwistConjugate[np1^.RLTwist,np1^.RLSym],@PruningUBigP[TetraConjugate[np1^.RLTetra,np1^.RLSym]][0])];
 
     np1^.FBPrunBig:= GetPruningLength[np^.FBPrunBig,GetPruningUBigP(2187*np1^.FBIdx
-    + TwistConjugate[np1^.FBTwist,np1^.FBSym],@PruningUBigP[TetraConjugate[np1^.FBTetra,np1^.FBSym]])];
+    + TwistConjugate[np1^.FBTwist,np1^.FBSym],@PruningUBigP[TetraConjugate[np1^.FBTetra,np1^.FBSym]][0])];
 
     if isOriented then
     begin
@@ -622,6 +622,7 @@ left:
     end;
     Inc(depth);Inc(r_depth);
     n[depth].nodenum:=nodecount;
+    logging('[Optimal Solver] searched depth: ' + IntToStr(r_depth) + ' nodes: ' + IntToStr(nodecount));
     // PostMessage(Form1.Handle,WM_NEXTLEVEL,Integer(self),depth+1);//Communicate
 
     np^.axis:=U;
@@ -1721,10 +1722,6 @@ begin
   else
   repeat
   Next2PhaseSolution;
-  writeln(self.SolverString);
-  writeln('return length: ',returnlength);
-  writeln('stopAt: ',stopAt);
-  maxLength:=returnLength-1;
   {$IF not QTM}
   until returnlength<=stopAt+3;
   {$ELSE}

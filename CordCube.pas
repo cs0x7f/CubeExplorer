@@ -11,7 +11,7 @@ function GetPruningPhase2P(index: Integer): Integer;
 {$IFEND}
 function GetPruningBigP(index: LongWord):Integer;
 function GetPruningCentP(index: LongWord):Integer;
-function GetPruningUBigP(index: LongWord;p:Pointer):Integer;
+function GetPruningUBigP(index: LongWord;p:PByte):Integer;
 function GetPruningFullCorner(index: Integer):Integer;
 {$IF FULLPHASE2}
 function GetPruningFullPhase2(index:LongWord;slice:Integer):Integer;
@@ -531,7 +531,7 @@ begin
   SetLength(FlipSliceMove,64430,27);//27 is number of different moves
   if FileExists(filename) then
   begin
-    logging('Reading FlipUDSlice MoveTable from file: ' + filename);
+    logging('Reading from file: ' + filename);
     fstr := TFileStream.Create(filename, fmOpenRead);
     for k:= 0 to 64430-1 do
     begin
@@ -822,7 +822,7 @@ end;
 
 //+++++++++++++Set entry in unpacked big pruning table++++++++++++++++++++++++++
 procedure SetPruningBig(index:LongWord;value:Integer);
-var mask,base,offset: Integer;
+var mask,base,offset: LongWord;
 begin
   mask:=3;//00000000 00000000 00000000 00000011
   base:= index shr 4;
@@ -1044,37 +1044,55 @@ end;
 
 //++++++++++++++++Get entry in unpacked big pruning table+++++++++++++++++++++++
 function GetPruningBig(index: LongWord):Integer;
-assembler;
-{$asmMode intel}
-asm
-  mov ecx,eax
-  shr eax,$4 {base}
-  and ecx,$f
-  add ecx,ecx {offset*2}
-  mov edx,[PruningBig]
-  mov eax,[edx+eax*4] {Pruning[base]}
-  mov edx,$3;
-  shl edx,cl {mask shl offset*2}
-  and eax,edx
-  shr eax,cl
+var mask,base,offset: LongWord; //Delphi version of asseembler code
+begin
+  mask:=3;//00000000 00000000 00000000 00000011
+  base:= index shr 4;
+  offset:= index and $f;
+  mask:= mask shl (offset*2);
+  mask:= mask and PruningBig[base];
+  Result:= mask shr (offset*2)
 end;
+// assembler;
+// {$asmMode intel}
+// asm
+//   mov ecx,eax
+//   shr eax,$4 {base}
+//   and ecx,$f
+//   add ecx,ecx {offset*2}
+//   mov edx,[PruningBig]
+//   mov eax,[edx+eax*4] {Pruning[base]}
+//   mov edx,$3;
+//   shl edx,cl {mask shl offset*2}
+//   and eax,edx
+//   shr eax,cl
+// end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //++++++++++++++++Get entry in unpacked big pruning table+++++++++++++++++++++++
-function GetPruningUBig(index: LongWord; p: Pointer):Integer;
-assembler;
-asm
-  mov ecx,eax
-  shr eax,$4 {base}
-  and ecx,$f
-  add ecx,ecx {offset*2}
-  mov edx,[p] //edx zeigt wahrscheinlich schon auf p!!!, /////////////////////////////
-  mov eax,[edx+eax*4] {Pruning[base]}
-  mov edx,$3;
-  shl edx,cl {mask shl offset*2}
-  and eax,edx
-  shr eax,cl
+function GetPruningUBig(index: LongWord; p: PInteger):Integer;
+var mask,base,offset: LongWord; //Delphi version of asseembler code
+begin
+  mask:=3;//00000000 00000000 00000000 00000011
+  base:= index shr 4;
+  offset:= index and $f;
+  mask:= mask shl (offset*2);
+  mask:= mask and p[base];
+  Result:= mask shr (offset*2)
 end;
+// assembler;
+// asm
+//   mov ecx,eax
+//   shr eax,$4 {base}
+//   and ecx,$f
+//   add ecx,ecx {offset*2}
+//   mov edx,[p] //edx zeigt wahrscheinlich schon auf p!!!, /////////////////////////////
+//   mov eax,[edx+eax*4] {Pruning[base]}
+//   mov edx,$3;
+//   shl edx,cl {mask shl offset*2}
+//   and eax,edx
+//   shr eax,cl
+// end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -1109,52 +1127,74 @@ end;
 
 //++++++++++++++++Get entry in packed big pruning table+++++++++++++++++++++++++
 function GetPruningBigP(index: LongWord):Integer;
-assembler;
-asm
-  cmp eax,705886618*4
-  jae @x5
-  mov edx,eax
-  and edx,3 //offset
-  shr eax,2 //base
-  mov ecx,[PruningBigP]
-  movzx eax, BYTE PTR[ecx+eax]
-  lea eax,[eax+eax*4]
-  add eax,OFFSET GetPacked
-  movzx eax,BYTE PTR[eax+edx]
-  ret
-@x5:
-  sub eax,705886618*4
-  mov ecx,[PruningBigP]
-  movzx eax, BYTE PTR[ecx+eax]
-  lea eax,[eax+eax*4]
-  add eax,OFFSET GetPacked
-  movzx eax,BYTE PTR[eax+4]
+var base,offset: LongWord; //Delphi version of asseembler code
+begin
+  if index < 705886618*4 then begin
+    base:= index shr 2;
+    offset:= index and $3;
+    Result:= GetPacked[PruningBigP[base],offset]
+  end else begin
+    base:= index - 705886618*4;
+    Result:= GetPacked[PruningBigP[base],4]
+  end
 end;
+// assembler;
+// asm
+//   cmp eax,705886618*4
+//   jae @x5
+//   mov edx,eax
+//   and edx,3 //offset
+//   shr eax,2 //base
+//   mov ecx,[PruningBigP]
+//   movzx eax, BYTE PTR[ecx+eax]
+//   lea eax,[eax+eax*4]
+//   add eax,OFFSET GetPacked
+//   movzx eax,BYTE PTR[eax+edx]
+//   ret
+// @x5:
+//   sub eax,705886618*4
+//   mov ecx,[PruningBigP]
+//   movzx eax, BYTE PTR[ecx+eax]
+//   lea eax,[eax+eax*4]
+//   add eax,OFFSET GetPacked
+//   movzx eax,BYTE PTR[eax+4]
+// end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //++++++++++++++++Get entry in packed ultrabig pruning table+++++++++++++++++++++++++
-function GetPruningUBigP(index: LongWord; p: Pointer):Integer; //p ist Pointer auf die TetraTabelle
-//edx enth�lt p, eax enth�lt index
-assembler;
-asm
-  mov ecx,[edx] //pointer auf Tabellenstart sichern
-  cmp eax,(64430/5)*2187*4
-  jae @x5
-  mov edx,eax
-  and edx,3 //offset
-  shr eax,2 //base
-  movzx eax, BYTE PTR[ecx+eax]  {eax:=Pruning[base]}
-  lea eax,[eax+eax*4] {multiply by 5 to find offset in GetPacked}
-  add eax,OFFSET GetPacked {eax:=GetPacked[Pruning[base]]}
-  movzx eax,BYTE PTR[eax+edx] {eax:=GetPacked[Pruning[base],offset]}
-  ret
-@x5:
-  sub eax,(64430/5)*2187*4 //base, offset is 4
-  movzx eax, BYTE PTR[ecx+eax]
-  lea eax,[eax+eax*4]
-  add eax,OFFSET GetPacked
-  movzx eax,BYTE PTR[eax+4]
+function GetPruningUBigP(index: LongWord; p: PByte):Integer; //p ist Pointer auf die TetraTabelle
+var base,offset: LongWord; //Delphi version of asseembler code
+begin
+  if index < ((64430 div 5)*2187*4) then begin
+    base:= index shr 2;
+    offset:= index and $3;
+    Result:= GetPacked[p[base],offset]
+  end else begin
+    base:= index - ((64430 div 5)*2187*4);
+    Result:= GetPacked[p[base],4]
+  end
 end;
+// //edx enth�lt p, eax enth�lt index
+// assembler;
+// asm
+//   mov ecx,[edx] //pointer auf Tabellenstart sichern
+//   cmp eax,(64430/5)*2187*4
+//   jae @x5
+//   mov edx,eax
+//   and edx,3 //offset
+//   shr eax,2 //base
+//   movzx eax, BYTE PTR[ecx+eax]  {eax:=Pruning[base]}
+//   lea eax,[eax+eax*4] {multiply by 5 to find offset in GetPacked}
+//   add eax,OFFSET GetPacked {eax:=GetPacked[Pruning[base]]}
+//   movzx eax,BYTE PTR[eax+edx] {eax:=GetPacked[Pruning[base],offset]}
+//   ret
+// @x5:
+//   sub eax,(64430/5)*2187*4 //base, offset is 4
+//   movzx eax, BYTE PTR[ecx+eax]
+//   lea eax,[eax+eax*4]
+//   add eax,OFFSET GetPacked
+//   movzx eax,BYTE PTR[eax+4]
+// end;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -1377,13 +1417,13 @@ begin
     end;
     // Form1.ProgressLabel.Caption:='';
     // if Application.MessageBox(PChar(Err[37]),'',MB_ICONWARNING or MB_YESNO)<>IDYES then
-    begin
-      PruningCent:=nil;//release memory
-      // Form1.FixCenterFacelets.Checked:=false;
-      // Form1.ProgressLabel.Visible:=false;
-      // Form1.Progressbar.Visible:=false;
-      Exit;
-    end;
+    // begin
+    //   PruningCent:=nil;//release memory
+    //     Form1.FixCenterFacelets.Checked:=false;
+    //     Form1.ProgressLabel.Visible:=false;
+    //     Form1.Progressbar.Visible:=false;
+    //   Exit;
+    // end;
     flipBackward:=false;//flip to backward search if true
     c:=CubieCube.Create;
     d:=CubieCube.Create;
@@ -1607,7 +1647,7 @@ begin
   else fn:=filename1;
   if FileExists(fn) then
   begin
-    logging('Reading FlipUDSlice PruningTable from file: ' + fn);
+    logging('Reading from file: ' + fn);
     SetLength(PruningP,64430*2187 div 5);//file loadable from disk?
     // Application.ProcessMessages;
     fs := TFileStream.Create(fn, fmOpenRead);
@@ -1667,7 +1707,6 @@ begin
       depth:= depth mod 3;
       for i:=0 to 64430*2187-1 do
       begin
-        // writeln(4, i);
         if i and $3ffff =0 then write('Create FlipUDSlice PruningTable... ', done * 100  div (64430*2187):3,'%',#13);
 
         match:=true;//any value
@@ -1675,7 +1714,6 @@ begin
           true: match:= GetPruning(i)=3;//not occupied yet
           false: match:= GetPruning(i)=depth;
         end;
-        // writeln(5);
 
         if match then
         begin
@@ -1993,7 +2031,7 @@ begin
   if sliceMode then fn:=filename2 else fn:=filename1;
   if FileExists(fn) then
   begin
-    logging('Reading Phase2 PruningTable from file: ' + fn);
+    logging('Reading from file: ' + fn);
     SetLength(PruningPhase2P,2768*40320 div 5);
     // Application.ProcessMessages;
     fs := TFileStream.Create(fn, fmOpenRead);
@@ -2553,6 +2591,7 @@ begin
   SetCurrentDir(ExtractFilePath(Paramstr(0)));//Cube Explorer directory
   if FileExists(filename) then
   begin
+    logging('Reading from file: ' + filename);
     try
        SetLength(PruningBigP,705886618);//788*2187*2048 div 5 + 1 (=766*921523)
     except
@@ -2609,14 +2648,14 @@ begin
     end;
     // Form1.ProgressLabel.Caption:='';
     // if Application.MessageBox(PChar(Err[20]),'',MB_ICONWARNING or MB_YESNO)<>IDYES then
-    begin
-      PruningBig:=nil;//release memory
-      USES_BIG:=false;
-      // OptOptionForm.CheckUseHuge.Checked:=false;
-      // Form1.ProgressLabel.Visible:=false;
-      // Form1.Progressbar.Visible:=false;
-      Exit;
-    end;
+    // begin
+    //   PruningBig:=nil;//release memory
+    //   USES_BIG:=false;
+    //     OptOptionForm.CheckUseHuge.Checked:=false;
+    //     Form1.ProgressLabel.Visible:=false;
+    //     Form1.Progressbar.Visible:=false;
+    //   Exit;
+    // end;
     flipBackward:=false;//flip to backward search if true
     c:=CubieCube.Create;
     d:=CubieCube.Create;
@@ -2649,6 +2688,7 @@ begin
     realDepth:=-1;
     while (done<>Int64(788)*2187*2048)do
     begin
+      writeln(done);
       {$IF not QTM}
       if realdepth=9 then flipBackward:=true;
       {$ELSE}
@@ -2688,7 +2728,6 @@ begin
               twist:= TwistMove[twist0,m];
               sym:= UDSliceSortedSym and 15;
               UDSliceSortedSym:= UDSliceSortedSym shr 4;
-
               flip:= FlipConjugate[flip,sym,UDSliceSortedSym];//modified Version
               twist:= TwistConjugate[twist,sym];//sym*UDTwist*sym^-1
               index:= (Int64(UDSliceSortedSym)*2048 +flip)*2187+twist;
@@ -3046,14 +3085,16 @@ begin
   CreateFlipUDSlicePruningTable; //phase 1 standard
   CreatePhase2PruningTable;//phase 2 standard
 
-   if ( useHuge=true) then
+  if ( USES_BIG ) then begin
     {$IF UHUGE}
     CreateUltraBigPruningTable;
  //   CreateCenTwistUDSliceSortedPruningTable;
     {$ELSE}
+    CreateFlipConjugateTable;
     CreateBigPruningTable;
 //    CreateCenTwistUDSliceSortedPruningTable;
     {$IFEND}
+  end;
 
 
 
@@ -3449,7 +3490,7 @@ begin
   depth:=0;
   While (Twist0<>0) or (flipSlice0<>0) or (Tetra0<>0) do
   begin
-    depthMod3:= GetPruningUBigP(2187*flipSlice0+Twist0,@PruningUBigP[Tetra0]);   //PPPPPPP
+    depthMod3:= GetPruningUBigP(2187*flipSlice0+Twist0,@PruningUBigP[Tetra0][0]);   //PPPPPPP
     if depthMod3=0 then depthMod3:=3;
      for m:= Ux1 to Fsx3 do
      begin
@@ -3467,7 +3508,7 @@ begin
        Twist1:=TwistConjugate[Twist1,_sym];
        Tetra1:=TetraConjugate[Tetra1,_sym];
        index:= 2187*flipSlice1+Twist1;
-       if GetPruningUBigP(index,@PruningUBigP[Tetra1])= depthMod3-1 then //closer to start
+       if GetPruningUBigP(index,@PruningUBigP[Tetra1][0])= depthMod3-1 then //closer to start
        begin
          Inc(Depth);
          flipSlice0:=flipSlice1;
@@ -3563,6 +3604,7 @@ begin
 
   if FileExists(filename) then
   begin
+    logging('Reading from file: ' + filename);
     try
        for i:= 0 to 69 do
          SetLength(PruningUBigP[i],28181682); //2187*64430/5 f�r alle 70 tetraCoords;
@@ -3617,17 +3659,18 @@ begin
     end;
     // Form1.ProgressLabel.Caption:='';
     // if Application.MessageBox(PChar(Err[20]),'',MB_ICONWARNING or MB_YESNO)<>IDYES then
-    begin
-      for i:= 0 to 69 do  PruningUBig[i]:=nil;//release memory
-      USES_BIG:=false;
-      // OptOptionForm.CheckUseHuge.Checked:=false;
-      // Form1.ProgressLabel.Visible:=false;
-      // Form1.Progressbar.Visible:=false;
-      Exit;
-    end;
+    // begin
+    //   for i:= 0 to 69 do  PruningUBig[i]:=nil;//release memory
+    //   USES_BIG:=false;
+    //     OptOptionForm.CheckUseHuge.Checked:=false;
+    //     Form1.ProgressLabel.Visible:=false;
+    //     Form1.Progressbar.Visible:=false;
+    //   Exit;
+    // end;
     flipBackward:=false;//flip to backward search if true
     c:=CubieCube.Create;
     d:=CubieCube.Create;
+
 
     SetLength(SymState,64430);//16 bits in each word, set bit j (0<=j<=15)
                               //if the coordinate has symmety S(j)
@@ -3667,6 +3710,7 @@ begin
     begin
       if realdepth=10 then flipBackward:=true;//evtl. auch 9 nehmen
       Inc(realDepth);
+      writeln(realDepth, done);
       // Form1.ProgressBar.Position:=realDepth;
       Inc(depth);
       depth:= depth mod 3;
@@ -3678,8 +3722,8 @@ begin
 
         match:=true;//any value
         case flipBackward of
-          true: match:= GetPruningUBig(i,@PruningUBig[t])=3;//not occupied yet
-          false: match:= GetPruningUBig(i,@PruningUBig[t])=depth;
+          true: match:= GetPruningUBig(i,@PruningUBig[t][0])=3;//not occupied yet
+          false: match:= GetPruningUBig(i,@PruningUBig[t][0])=depth;
         end;
 
         if match then
@@ -3707,7 +3751,7 @@ begin
             case flipBackward of
               false:
               begin
-                if GetPruningUBig(index,@PruningUBig[tetra])=3 then
+                if GetPruningUBig(index,@PruningUBig[tetra][0])=3 then
                 begin
                   SetPruningUBig(index,(depth+1) mod 3,tetra);
                   Inc(done);
@@ -3722,7 +3766,7 @@ begin
                         altUDTwist:= TwistConjugate[UDTwist,j];
                         altTetra:=TetraConjugate[tetra,j];
                         index:= 2187*flipUDSlice+altUDTwist;
-                        if GetPruningUBig(index,@PruningUBig[altTetra])=3 then
+                        if GetPruningUBig(index,@PruningUBig[altTetra][0])=3 then
                         begin
                           SetPruningUBig(index,(depth+1) mod 3,altTetra);
                           Inc(done);
@@ -3734,7 +3778,7 @@ begin
               end;
               true:
               begin
-                if GetPruningUBig(index,@PruningUBig[tetra])= depth then
+                if GetPruningUBig(index,@PruningUBig[tetra][0])= depth then
                 begin
                   SetPruningUBig(i,(depth+1) mod 3,t);
                   Inc(done);
@@ -3764,10 +3808,10 @@ begin
           value:=0;
           for j:= 0 to 3 do
           begin
-            value:=value+n*GetPruningUBig(4*i+j,@PruningUBig[t]);//we want to use mod 4 arithmetic
+            value:=value+n*GetPruningUBig(4*i+j,@PruningUBig[t][0]);//we want to use mod 4 arithmetic
             n:=n*3;                          //and not mod 5
           end;
-          value:=value+n*GetPruningUBig((64430 div 5)*2187*4+i,@PruningUBig[t]);
+          value:=value+n*GetPruningUBig((64430 div 5)*2187*4+i,@PruningUBig[t][0]);
 
           buf[i mod 2187]:=Byte(value);//buffering increases writing speed
           if i mod 2187 = 2186 then

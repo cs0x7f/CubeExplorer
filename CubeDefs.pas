@@ -12,8 +12,6 @@ const curSymNormal = 1;
 
 const manSep = 'f';
 
-const useHuge = false;
-
 const QTM = false;//F�r HTM auf false setzen
 
 var Terminate :boolean = false;
@@ -33,7 +31,12 @@ const curVersion = 'Cube Explorer 5.15 '+vers;
 
 
 const copyright = '(c) H.Kociemba 2019';
-const UHUGE = True;//Ultrahuge solver, jetzt Standardversion
+
+{$IFDEF HUGE}
+const UHUGE = true;
+{$ELSE}
+const UHUGE = false;
+{$ENDIF}
 
 const BatchTimeInverval  = 1000;//Abst�nde bei Autorun, default 1000
 const OptimalMax = 27; //H�chstzahl der Z�ge beim optimalen Solver, default bei twophase MAXNODES
