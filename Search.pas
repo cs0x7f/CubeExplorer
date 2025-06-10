@@ -622,7 +622,7 @@ left:
     end;
     Inc(depth);Inc(r_depth);
     n[depth].nodenum:=nodecount;
-    logging('[Optimal Solver] searched depth: ' + IntToStr(r_depth) + ' nodes: ' + IntToStr(nodecount));
+    // logging('[Optimal Solver] searched depth: ' + IntToStr(r_depth) + ' nodes: ' + IntToStr(nodecount));
     // PostMessage(Form1.Handle,WM_NEXTLEVEL,Integer(self),depth+1);//Communicate
 
     np^.axis:=U;

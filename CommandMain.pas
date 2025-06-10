@@ -1,7 +1,23 @@
-
 program MyProgram;
 
-uses cthreads, CubeDefs, CubiCube, CordCube, Symmetries, Search, Unix, SysUtils;
+uses cthreads, CubeDefs, CubiCube, CordCube, Symmetries, Search, Unix, SysUtils, SyncObjs, Classes;
+
+type TSearcher = class(IDA)
+public
+    constructor Create(CoordCube: CoordCube); overload;
+    procedure Execute; override;
+end;
+
+constructor TSearcher.Create(CoordCube: CoordCube);
+begin
+    inherited Create(CoordCube);
+end;
+
+var scrambles: TStrings;
+    scramble: String;
+    nSolving, scrIdx, i1: Integer;
+    Lock: TCriticalSection;
+    eofEvent: TEventObject;
 
 function parseScramble(scramble: String): CubieCube;
 var cc: CubieCube;
@@ -66,15 +82,52 @@ begin
   Result := cc;
 end;
 
+procedure doNextScramble(Sender: TObject);
 var cc: CubieCube;
     cc2: CoordCube;
-    idaObj: IDA;
     scramble: String;
-    solLen: Integer;
-    tv1: TTimeVal;
-    tv2: TTimeVal;
+    nextIda: TSearcher;
 begin
-  USES_BIG := (paramCount() > 0) and (paramStr(1) = '-b');
+    Dec(nSolving);
+    if scrIdx < scrambles.Count then begin
+        scramble := scrambles[scrIdx];
+        Inc(scrIdx);
+        Inc(nSolving);
+        cc := parseScramble(scramble);
+        cc2 := CoordCube.Create(cc);
+        nextIda := TSearcher.Create(cc2);
+        nextIda.maxLength := 30;
+        nextIda.runOptimal := true;
+        nextIda.FreeOnTerminate := true;
+        nextIda.start();
+    end else if nSolving = 0 then begin
+        eofEvent.SetEvent;
+    end;
+end;
+
+procedure TSearcher.Execute;
+var StartTime, EndTime: TTimeVal;
+begin
+    fpGetTimeOfDay(@StartTime, nil);
+    inherited;
+    fpGetTimeOfDay(@EndTime, nil);
+    Lock.Acquire;
+    writeln('Solved in ', returnLength, ' moves, nodes= ', NodeCount,
+      ' tt= ', (EndTime.tv_sec - StartTime.tv_sec) + (EndTime.tv_usec - StartTime.tv_usec)/1e6:0:3, ' s',
+      ' sol= ', solverString);
+    doNextScramble(self);
+    Lock.Release;
+end;
+
+begin
+  nSolving := 1;
+  for i1 := 1 to paramCount do begin
+      if paramStr(i1) = '-b' then begin
+      USES_BIG := true;
+    end else if paramStr(i1) = '-t' then begin
+      nSolving := StrToInt(paramStr(i1+1));
+    end;
+  end;
 
   CreateSymmetryTables;
   CreateGetPackedTable;
@@ -87,19 +140,16 @@ begin
   CreateGetPruningLengthTable;
   CreateGetEdge8PermTable;
 
-  while not EOF do
-  begin
-    ReadLn(scramble);
-    cc := parseScramble(scramble);
-    cc2 := CoordCube.Create(cc);
-    idaObj := IDA.Create(cc2);
-    idaObj.maxLength := 30;
-    idaObj.runOptimal := true;
-    fpGetTimeOfDay(@tv1, nil);
-    solLen := idaObj.NextSolution(30);
-    fpGetTimeOfDay(@tv2, nil);
-    writeln('Solved in ', solLen, ' moves, nodes= ', idaObj.NodeCount,
-      ' tt= ', (tv2.tv_sec - tv1.tv_sec) + (tv2.tv_usec - tv1.tv_usec)/1e6:0:3, ' s',
-      ' sol= ', idaObj.solverString);
+  scrambles := TStringList.Create;
+  while not EOF do begin
+    readln(scramble);
+    scrambles.Add(scramble);
   end;
+  eofEvent := TEventObject.Create(nil, true, false, '');
+  Lock := TCriticalSection.Create;
+  scrIdx := 0;
+  Lock.Acquire;
+  for i1 := 1 to nSolving do doNextScramble(nil);
+  Lock.Release;
+  eofEvent.WaitFor(INFINITE);
 end.
